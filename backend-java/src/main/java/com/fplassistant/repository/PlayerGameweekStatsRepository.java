@@ -9,6 +9,8 @@ public interface PlayerGameweekStatsRepository extends JpaRepository<PlayerGamew
 
     List<PlayerGameweekStats> findByPlayerId(Integer playerId);
 
+    List<PlayerGameweekStats> findByPlayerIdOrderByGameweekIdDesc(Integer playerId);
+
     List<PlayerGameweekStats> findByGameweekId(Integer gameweekId);
 
     List<PlayerGameweekStats> findByPlayerIdAndGameweekId(Integer playerId, Integer gameweekId);

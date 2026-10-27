@@ -24,6 +24,14 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
+        log.warn("Bad request: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody(
+                HttpStatus.BAD_REQUEST.value(), ex.getMessage()
+        ));
+    }
+
     @ExceptionHandler(FplApiException.class)
     public ResponseEntity<Map<String, Object>> handleFplApiError(FplApiException ex) {
         log.error("FPL API error: {}", ex.getMessage(), ex);

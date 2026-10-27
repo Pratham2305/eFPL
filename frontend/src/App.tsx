@@ -17,6 +17,7 @@ export function App() {
   const [teamId, setTeamId] = useState<string>(() => localStorage.getItem('fpl_team_id') || '3500002');
   const [activeTab, setActiveTab] = useState<'pitch' | 'recommendations' | 'chips' | 'fixtures' | 'directory'>('pitch');
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  const [chatInitialQuery, setChatInitialQuery] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeamData();
@@ -62,6 +63,11 @@ export function App() {
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  const handleOpenChatWithQuery = (prompt: string) => {
+    setChatInitialQuery(prompt);
+    setIsChatOpen(true);
   };
 
   return (
@@ -195,13 +201,7 @@ export function App() {
 
         {/* Tab 5: Player Directory */}
         {!loading && activeTab === 'directory' && (
-          team ? (
-            <PlayerExplorer startingXI={team.startingXI} bench={team.bench} />
-          ) : (
-            <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-secondary)' }}>
-              Sync your team to view player directory stats.
-            </div>
-          )
+          <PlayerExplorer onAskAi={handleOpenChatWithQuery} />
         )}
       </main>
 
@@ -209,7 +209,10 @@ export function App() {
       <button
         id="ai-chat-btn"
         className="btn btn-primary"
-        onClick={() => setIsChatOpen(!isChatOpen)}
+        onClick={() => {
+          setChatInitialQuery(null);
+          setIsChatOpen(!isChatOpen);
+        }}
         style={{
           position: 'fixed',
           bottom: 24,
@@ -225,7 +228,14 @@ export function App() {
       </button>
 
       {/* AI Chat Modal */}
-      <AiChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <AiChatModal
+        isOpen={isChatOpen}
+        onClose={() => {
+          setIsChatOpen(false);
+          setChatInitialQuery(null);
+        }}
+        initialQuery={chatInitialQuery}
+      />
 
       {/* Footer */}
       <footer style={{

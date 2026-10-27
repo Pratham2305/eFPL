@@ -191,13 +191,16 @@ public class FplApiSyncService {
             player.setNowCost(el.getNowCost());
             player.setStatus(el.getStatus());
             player.setChanceOfPlayingNext(el.getChanceOfPlayingNextRound());
+            player.setChanceOfPlayingThisRound(el.getChanceOfPlayingThisRound());
             player.setNews(el.getNews());
+            player.setNewsAdded(parseDateTime(el.getNewsAdded()));
             player.setPhoto(el.getPhoto());
             player.setForm(parseBigDecimal(el.getForm()));
             player.setTotalPoints(el.getTotalPoints());
             player.setPointsPerGame(parseBigDecimal(el.getPointsPerGame()));
             player.setSelectedByPercent(parseBigDecimal(el.getSelectedByPercent()));
             player.setMinutes(el.getMinutes());
+            player.setStarts(el.getStarts() != null ? el.getStarts() : 0);
             player.setGoalsScored(el.getGoalsScored());
             player.setAssists(el.getAssists());
             player.setCleanSheets(el.getCleanSheets());
@@ -220,6 +223,9 @@ public class FplApiSyncService {
             player.setExpectedGoalsConceded(parseBigDecimal(el.getExpectedGoalsConceded()));
             player.setTransfersInEvent(el.getTransfersInEvent());
             player.setTransfersOutEvent(el.getTransfersOutEvent());
+            player.setCostChangeStart(el.getCostChangeStart() != null ? el.getCostChangeStart() : 0);
+            player.setCostChangeEvent(el.getCostChangeEvent() != null ? el.getCostChangeEvent() : 0);
+            player.setEpNext(parseBigDecimal(el.getEpNext()));
             playerRepo.save(player);
         }
         return elements.size();

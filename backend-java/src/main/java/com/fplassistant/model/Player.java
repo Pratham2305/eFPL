@@ -36,7 +36,13 @@ public class Player {
     @Column(name = "chance_of_playing_next")
     private Integer chanceOfPlayingNext;
 
+    @Column(name = "chance_of_playing_this_round")
+    private Integer chanceOfPlayingThisRound;
+
     private String news;
+
+    @Column(name = "news_added")
+    private LocalDateTime newsAdded;
 
     @Column(length = 100)
     private String photo;
@@ -53,6 +59,9 @@ public class Player {
     private BigDecimal selectedByPercent;
 
     private Integer minutes;
+
+    @Column(name = "starts")
+    private Integer starts;
 
     @Column(name = "goals_scored")
     private Integer goalsScored;
@@ -108,6 +117,15 @@ public class Player {
     @Column(name = "transfers_out_event")
     private Integer transfersOutEvent;
 
+    @Column(name = "cost_change_start")
+    private Integer costChangeStart;
+
+    @Column(name = "cost_change_event")
+    private Integer costChangeEvent;
+
+    @Column(name = "ep_next")
+    private BigDecimal epNext;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
@@ -140,8 +158,14 @@ public class Player {
     public Integer getChanceOfPlayingNext() { return chanceOfPlayingNext; }
     public void setChanceOfPlayingNext(Integer chanceOfPlayingNext) { this.chanceOfPlayingNext = chanceOfPlayingNext; }
 
+    public Integer getChanceOfPlayingThisRound() { return chanceOfPlayingThisRound; }
+    public void setChanceOfPlayingThisRound(Integer chanceOfPlayingThisRound) { this.chanceOfPlayingThisRound = chanceOfPlayingThisRound; }
+
     public String getNews() { return news; }
     public void setNews(String news) { this.news = news; }
+
+    public LocalDateTime getNewsAdded() { return newsAdded; }
+    public void setNewsAdded(LocalDateTime newsAdded) { this.newsAdded = newsAdded; }
 
     public String getPhoto() { return photo; }
     public void setPhoto(String photo) { this.photo = photo; }
@@ -160,6 +184,9 @@ public class Player {
 
     public Integer getMinutes() { return minutes; }
     public void setMinutes(Integer minutes) { this.minutes = minutes; }
+
+    public Integer getStarts() { return starts; }
+    public void setStarts(Integer starts) { this.starts = starts; }
 
     public Integer getGoalsScored() { return goalsScored; }
     public void setGoalsScored(Integer goalsScored) { this.goalsScored = goalsScored; }
@@ -226,6 +253,15 @@ public class Player {
 
     public Integer getTransfersOutEvent() { return transfersOutEvent; }
     public void setTransfersOutEvent(Integer transfersOutEvent) { this.transfersOutEvent = transfersOutEvent; }
+
+    public Integer getCostChangeStart() { return costChangeStart; }
+    public void setCostChangeStart(Integer costChangeStart) { this.costChangeStart = costChangeStart; }
+
+    public Integer getCostChangeEvent() { return costChangeEvent; }
+    public void setCostChangeEvent(Integer costChangeEvent) { this.costChangeEvent = costChangeEvent; }
+
+    public BigDecimal getEpNext() { return epNext; }
+    public void setEpNext(BigDecimal epNext) { this.epNext = epNext; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }

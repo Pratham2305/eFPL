@@ -6,7 +6,7 @@ Complete documentation for all REST API endpoints provided by the **Java Spring 
 
 ## ☕ Java Spring Boot API (`http://localhost:8080/api`)
 
-The Java backend serves as the main system of record, handling team/squad state, FPL API synchronization, rule validation, and proxying recommendation algorithms to the Python ML service.
+The Java backend serves as the main system of record, handling team/squad state, FPL API synchronization, rule validation, player directory browsing, and proxying recommendation algorithms to the Python ML service.
 
 ---
 
@@ -18,7 +18,7 @@ The Java backend serves as the main system of record, handling team/squad state,
 * **Response `200 OK`**:
 ```json
 {
-  "gameweekId": 2,
+  "gameweekId": 8,
   "overallRank": 912695,
   "overallPoints": 162,
   "gameweekPoints": 121,
@@ -31,38 +31,7 @@ The Java backend serves as the main system of record, handling team/squad state,
     "benchBoost": true,
     "tripleCaptain": true
   },
-  "startingXI": [
-    {
-      "playerId": 1,
-      "webName": "Raya",
-      "teamShortName": "ARS",
-      "position": "GK",
-      "squadPosition": 1,
-      "multiplier": 1,
-      "isCaptain": false,
-      "isViceCaptain": false,
-      "nowCost": 60,
-      "form": 6.00,
-      "totalPoints": 12,
-      "status": "a",
-      "news": ""
-    },
-    {
-      "playerId": 426,
-      "webName": "B.Fernandes",
-      "teamShortName": "MUN",
-      "position": "MID",
-      "squadPosition": 6,
-      "multiplier": 2,
-      "isCaptain": true,
-      "isViceCaptain": false,
-      "nowCost": 120,
-      "form": 12.50,
-      "totalPoints": 25,
-      "status": "a",
-      "news": ""
-    }
-  ],
+  "startingXI": [ ... ],
   "bench": [ ... ]
 }
 ```
@@ -73,14 +42,14 @@ The Java backend serves as the main system of record, handling team/squad state,
 * **Summary**: Triggers full data sync from the official FPL API (teams, players, gameweeks, fixtures, and user squad picks).
 * **HTTP Method**: `POST`
 * **Query Parameters**:
-  * `teamId` (optional, integer): FPL entry team ID. Defaults to configured team ID or sample team ID 1.
-* **Example**: `POST /api/team/sync?teamId=12345`
+  * `teamId` (optional, integer): FPL entry team ID. Defaults to configured team ID.
+* **Example**: `POST /api/team/sync?teamId=3500002`
 * **Response `200 OK`**:
 ```json
 {
   "status": "OK",
   "message": "Full sync completed successfully",
-  "playersUpdated": 652,
+  "playersUpdated": 669,
   "fixturesUpdated": 380,
   "gameweeksUpdated": 38
 }
@@ -88,7 +57,154 @@ The Java backend serves as the main system of record, handling team/squad state,
 
 ---
 
-### 2. Fixture Endpoints
+### 2. Player Directory Endpoints
+
+#### `GET /api/players`
+* **Summary**: Search, filter, sort, and paginate through ALL ~700 Premier League players. Includes ML model expected points (`xpNext`), official FPL projection (`epNext`), next opponent with FDR coloring, and squad status flags.
+* **HTTP Method**: `GET`
+* **Query Parameters**:
+  * `search` (optional, string): Case-insensitive search on player names (`webName`, `firstName`, `secondName`) with Scandinavian/European accent normalization (e.g. `odegaard` matches `Ødegaard`).
+  * `positions` (optional, comma-separated integers): Element type (1: GKP, 2: DEF, 3: MID, 4: FWD). E.g. `positions=3,4`.
+  * `teams` (optional, comma-separated integers): Premier League team IDs. E.g. `teams=1,14`.
+  * `minPrice` / `maxPrice` (optional, double): Price filters in millions of pounds (e.g. `minPrice=5.0&maxPrice=10.5`).
+  * `status` (optional, string): Availability status filter. `a` (available), `d,i,s,u` (flagged / injured / suspended).
+  * `minOwnership` / `maxOwnership` (optional, double): Ownership percentage bounds (0.0 to 100.0).
+  * `inSquad` (optional, boolean): `true` to filter players in current user squad, `false` to filter players not in squad.
+  * `sortBy` (optional, string): Sort field (`total_points`, `expected_points`, `form`, `now_cost`, `selected_by_percent`, `goals_scored`, `assists`, `clean_sheets`, `minutes`, `ict_index`, `expected_goals`, `expected_assists`, `expected_goal_involvements`, `web_name`). Defaults to `total_points`.
+  * `sortDir` (optional, string): `asc` or `desc`. Defaults to `desc`. Missing/null values are always placed last regardless of direction, with deterministic tie-breaking by player ID.
+  * `page` (optional, integer): Zero-based page index (defaults to `0`).
+  * `size` (optional, integer): Page size (defaults to `25`, max `100`).
+* **Response `200 OK`**:
+```json
+{
+  "content": [
+    {
+      "id": 411,
+      "webName": "Haaland",
+      "firstName": "Erling",
+      "secondName": "Haaland",
+      "teamId": 15,
+      "teamName": "Man City",
+      "teamShortName": "MCI",
+      "elementType": 4,
+      "positionName": "FWD",
+      "nowCost": 157,
+      "costChangeStart": 2,
+      "costChangeEvent": 0,
+      "status": "a",
+      "chanceOfPlayingNext": 100,
+      "chanceOfPlayingThisRound": 100,
+      "news": "",
+      "newsAdded": "2026-10-19T13:00:10.543876",
+      "form": 9.00,
+      "totalPoints": 66,
+      "pointsPerGame": 8.20,
+      "selectedByPercent": 78.10,
+      "minutes": 709,
+      "starts": 8,
+      "goalsScored": 9,
+      "assists": 0,
+      "cleanSheets": 3,
+      "ictIndex": 78.30,
+      "expectedGoals": 6.09,
+      "expectedAssists": 0.77,
+      "expectedGoalInvolvements": 6.86,
+      "epNext": 9.00,
+      "xpNext": 7.82,
+      "inSquad": true,
+      "isStarting": true,
+      "isCaptain": false,
+      "isViceCaptain": true,
+      "nextOpponentShortName": "BHA (H)",
+      "nextOpponentDifficulty": 3,
+      "isBlankGameweek": false,
+      "isDoubleGameweek": false
+    }
+  ],
+  "page": 0,
+  "size": 25,
+  "totalElements": 669,
+  "totalPages": 27,
+  "hasNext": true,
+  "hasPrevious": false
+}
+```
+
+---
+
+#### `GET /api/players/{id}`
+* **Summary**: Returns complete player inspection detail, including summary stats, next 6 upcoming Premier League fixtures with FDR difficulty, multi-GW cumulative expected points (`xp3`, `xp6`), and recent per-match statistics.
+* **HTTP Method**: `GET`
+* **Response `200 OK`**:
+```json
+{
+  "summary": { ... },
+  "upcomingFixtures": [
+    {
+      "fixtureId": 88,
+      "gameweekId": 9,
+      "gameweekName": "Gameweek 9",
+      "opponentTeamId": 5,
+      "opponentName": "Brighton",
+      "opponentShortName": "BHA",
+      "difficulty": 3,
+      "kickoffTime": "2026-10-31T15:00:00",
+      "isHome": true,
+      "isBlankGameweek": false,
+      "isDoubleGameweek": false
+    }
+  ],
+  "historicalStats": [
+    {
+      "gameweekId": 8,
+      "opponentTeamId": 20,
+      "opponentShortName": "SUN",
+      "wasHome": false,
+      "totalPoints": 13,
+      "minutes": 90,
+      "goalsScored": 2,
+      "assists": 0,
+      "cleanSheets": 1,
+      "expectedGoals": 1.45,
+      "expectedAssists": 0.12
+    }
+  ],
+  "upcomingPredictions": [ ... ],
+  "xp3": 21.4,
+  "xp6": 42.8
+}
+```
+* **Response `404 Not Found`**: Returns RFC 7807 problem details if player ID does not exist.
+
+---
+
+#### `GET /api/players/meta`
+* **Summary**: Returns filter metadata: all 20 Premier League clubs, 4 element positions, min/max price range, min/max ownership range, total active player count, and current/next gameweeks.
+* **HTTP Method**: `GET`
+* **Response `200 OK`**:
+```json
+{
+  "teams": [
+    { "id": 1, "name": "Arsenal", "shortName": "ARS" },
+    { "id": 15, "name": "Man City", "shortName": "MCI" }
+  ],
+  "positions": [
+    { "elementType": 1, "shortName": "GKP", "singularName": "Goalkeeper" },
+    { "elementType": 2, "shortName": "DEF", "singularName": "Defender" },
+    { "elementType": 3, "shortName": "MID", "singularName": "Midfielder" },
+    { "elementType": 4, "shortName": "FWD", "singularName": "Forward" }
+  ],
+  "priceRange": { "min": 3.9, "max": 15.7 },
+  "ownershipRange": { "min": 0.0, "max": 78.1 },
+  "totalPlayers": 669,
+  "currentGameweek": 8,
+  "nextGameweek": 9
+}
+```
+
+---
+
+### 3. Fixture Endpoints
 
 #### `GET /api/fixtures`
 * **Summary**: Returns Premier League fixtures with Fixture Difficulty Rating (FDR 1-5).
@@ -98,129 +214,30 @@ The Java backend serves as the main system of record, handling team/squad state,
   * `teamId` (optional, integer): Filter fixtures for a specific Premier League club (e.g. `2`).
   * `rangeEnd` (optional, integer): End gameweek for multi-GW range (e.g. `rangeEnd=5`).
 * **Example**: `GET /api/fixtures?gameweekId=1&rangeEnd=5`
-* **Response `200 OK`**:
-```json
-[
-  {
-    "id": 1,
-    "gameweekId": 1,
-    "homeTeamName": "Arsenal",
-    "homeTeamShortName": "ARS",
-    "awayTeamName": "Wolverhampton Wanderers",
-    "awayTeamShortName": "WOL",
-    "homeDifficulty": 2,
-    "awayDifficulty": 4,
-    "kickoffTime": "2026-08-17T14:00:00",
-    "finished": true,
-    "homeScore": 2,
-    "awayScore": 0
-  }
-]
-```
 
 ---
 
-### 3. ML Recommendations & Analytics Endpoints
+### 4. ML Recommendations & Analytics Endpoints
 
 #### `GET /api/recommendations/transfers`
 * **Summary**: Ranks transfer-in / transfer-out player pairs by net predicted xPoints gain over a multi-GW horizon.
 * **Query Parameters**: `horizon` (default: 3).
-* **Response `200 OK`**:
-```json
-{
-  "status": "success",
-  "horizon": 3,
-  "recommendations": [
-    {
-      "transfer_out": { "id": 182, "web_name": "Amenda", "now_cost": 40, "xpoints_horizon": 2.5 },
-      "transfer_in": { "id": 4, "web_name": "Gabriel", "now_cost": 60, "xpoints_horizon": 14.2 },
-      "net_points_gain": 11.7,
-      "cost_delta": 2.0,
-      "horizon_gws": 3,
-      "reasoning": "Replacing Amenda (2.5 xPts) with Gabriel (14.2 xPts) yields +11.7 net points over next 3 GWs."
-    }
-  ]
-}
-```
 
 ---
 
 #### `GET /api/recommendations/captain`
 * **Summary**: Ranks starting XI players for Safe Captain (high floor) vs. Differential Captain (high ceiling).
-* **Response `200 OK`**:
-```json
-{
-  "status": "success",
-  "captaincy_rankings": {
-    "safe": [
-      {
-        "player_id": 426,
-        "web_name": "B.Fernandes",
-        "team_short": "MUN",
-        "expected_points": 7.45,
-        "floor": 3.73,
-        "ceiling": 16.41,
-        "start_probability": 0.95,
-        "ownership_percent": 24.5,
-        "safe_score": 5.66
-      }
-    ],
-    "differential": [ ... ]
-  }
-}
-```
 
 ---
 
 #### `GET /api/recommendations/chips`
 * **Summary**: Forward-looking 8-GW roadmap evaluating optimal deployment windows for Wildcard, Free Hit, Bench Boost, and Triple Captain.
 * **Query Parameters**: `horizon` (default: 8).
-* **Response `200 OK`**:
-```json
-{
-  "status": "success",
-  "chip_strategy": {
-    "horizon_gws": 8,
-    "chips_available": {
-      "wildcard": true,
-      "free_hit": true,
-      "bench_boost": true,
-      "triple_captain": true
-    },
-    "recommendations": [
-      {
-        "chip": "Triple Captain",
-        "recommended_gw": 34,
-        "confidence": 0.95,
-        "reasoning": "GW34 offers exceptional return for B.Fernandes (9.2 xPts in a Double Gameweek)."
-      }
-    ]
-  }
-}
-```
 
 ---
 
 #### `GET /api/analysis/weaknesses`
 * **Summary**: Returns starting XI players flagged for low expected points (<3.0) or injury/status doubt.
-* **Response `200 OK`**:
-```json
-{
-  "status": "success",
-  "weaknesses": [
-    {
-      "player_id": 182,
-      "web_name": "Amenda",
-      "team_short": "COV",
-      "position_name": "DEF",
-      "expected_points": 1.25,
-      "chance_of_playing": 50,
-      "issue": "Injured / Doubtful",
-      "now_cost": 40
-    }
-  ]
-}
-```
 
 ---
 
@@ -233,26 +250,17 @@ The Java backend serves as the main system of record, handling team/squad state,
 #### `POST /api/predictions/generate`
 * **Summary**: Triggers feature engineering and xPoints prediction model generation.
 * **Query Parameters**: `targetGw` (optional, integer).
-* **Response `200 OK`**: `{"status": "success", "predictions_saved": 561}`
 
 ---
 
-### 4. AI Chat Assistant Endpoint
+### 5. AI Chat Assistant Endpoint
 
 #### `POST /api/chat`
 * **Summary**: Natural language manager Q&A chat grounded in current squad state, predictions, and recommendations.
 * **Request Body**:
 ```json
 {
-  "query": "Why should I captain Bruno Fernandes over Isak?"
-}
-```
-* **Response `200 OK`**:
-```json
-{
-  "query": "Why should I captain Bruno Fernandes over Isak?",
-  "reply": "🤖 **FPL Assistant Analysis**:\nBruno Fernandes is the top safe captain choice with 7.45 xPoints and a high floor of 3.73, playing at Home with an FDR 2 fixture.",
-  "grounded": true
+  "query": "Tell me about Haaland and whether I should consider transferring him into my squad."
 }
 ```
 
@@ -260,7 +268,7 @@ The Java backend serves as the main system of record, handling team/squad state,
 
 ## 🐍 Python FastAPI ML Service (`http://localhost:8000`)
 
-The Python ML service handles heavy data ingestion, feature engineering, machine learning predictions, and recommendation algorithms.
+The Python ML service handles data ingestion, feature engineering, machine learning predictions, and recommendation algorithms.
 
 | Endpoint | Method | Description |
 |---|---|---|

@@ -10,4 +10,8 @@ public interface PredictionRepository extends JpaRepository<Prediction, Integer>
     List<Prediction> findByPlayerIdAndGameweekId(Integer playerId, Integer gameweekId);
 
     List<Prediction> findByGameweekId(Integer gameweekId);
+
+    List<Prediction> findByGameweekIdBetween(Integer startGw, Integer endGw);
+
+    List<Prediction> findByPlayerIdAndGameweekIdBetween(Integer playerId, Integer startGw, Integer endGw);
 }

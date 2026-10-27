@@ -6,6 +6,7 @@ import { ChatHealth, ChatResponse } from '../types';
 interface AiChatModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialQuery?: string | null;
 }
 
 interface MessageItem {
@@ -27,7 +28,7 @@ const SUGGESTED_PROMPTS = [
   'Compare Salah and Palmer'
 ];
 
-export const AiChatModal: React.FC<AiChatModalProps> = ({ isOpen, onClose }) => {
+export const AiChatModal: React.FC<AiChatModalProps> = ({ isOpen, onClose, initialQuery }) => {
   const [query, setQuery] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(() => localStorage.getItem('chat_conversation_id'));
   const [health, setHealth] = useState<ChatHealth | null>(null);
@@ -44,12 +45,15 @@ export const AiChatModal: React.FC<AiChatModalProps> = ({ isOpen, onClose }) => 
     }
   ]);
 
-  // Check Ollama health status on modal open
+  // Check Ollama health status on modal open and handle initialQuery
   useEffect(() => {
     if (isOpen) {
       fetchHealth();
+      if (initialQuery && initialQuery.trim()) {
+        executeSend(initialQuery.trim());
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialQuery]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

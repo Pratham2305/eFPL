@@ -74,7 +74,12 @@ public class PlayerResolver {
 
     public static String normalize(String input) {
         if (input == null) return "";
-        String decomposed = Normalizer.normalize(input, Normalizer.Form.NFD);
+        String s = input.replace("Ø", "O").replace("ø", "o")
+                .replace("Æ", "Ae").replace("æ", "ae")
+                .replace("ß", "ss")
+                .replace("Đ", "D").replace("đ", "d")
+                .replace("Ł", "L").replace("ł", "l");
+        String decomposed = Normalizer.normalize(s, Normalizer.Form.NFD);
         String withoutDiacritics = DIACRITICS.matcher(decomposed).replaceAll("");
         return withoutDiacritics.toLowerCase()
                 .replaceAll("[^a-z0-9\\s-]", " ")
