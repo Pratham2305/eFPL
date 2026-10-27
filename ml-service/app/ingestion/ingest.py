@@ -68,7 +68,7 @@ async def run_full_ingestion(db: Session) -> dict[str, int]:
     team_id = settings.fpl_team_id
     if team_id > 0:
         try:
-            await _sync_user_team(db, team_id)
+            await sync_user_team(db, team_id)
         except Exception as e:
             logger.warning("Failed to sync user team (id=%d): %s", team_id, e)
 
@@ -332,7 +332,7 @@ def _upsert_player_history(db: Session, player_id: int, history: list[dict]) -> 
             transfers_in=h.get("transfers_in", 0),
             transfers_out=h.get("transfers_out", 0),
         ).on_conflict_do_update(
-            constraint="player_gameweek_stats_player_id_gameweek_id_fixture_id_key",
+            index_elements=["player_id", "gameweek_id", "fixture_id"],
             set_={
                 "total_points": h.get("total_points", 0),
                 "minutes": h.get("minutes", 0),
@@ -368,14 +368,14 @@ def _upsert_player_history(db: Session, player_id: int, history: list[dict]) -> 
     return count
 
 
-async def _sync_user_team(db: Session, team_id: int) -> None:
+async def sync_user_team(db: Session, team_id: int) -> dict:
     """Sync user's team state and picks from the FPL API."""
     entry = await fpl_client.fetch_entry(team_id)
     current_event = entry.get("current_event")
 
     if not current_event:
         logger.warning("No current event for team %d", team_id)
-        return
+        return {"status": "warning", "message": "No current event"}
 
     # Upsert team state
     stmt = pg_insert(MyTeamState).values(
@@ -386,7 +386,7 @@ async def _sync_user_team(db: Session, team_id: int) -> None:
         bank=entry.get("last_deadline_bank"),
         team_value=entry.get("last_deadline_value"),
     ).on_conflict_do_update(
-        constraint="my_team_state_gameweek_id_key",
+        index_elements=["gameweek_id"],
         set_={
             "overall_rank": entry.get("summary_overall_rank"),
             "overall_points": entry.get("summary_overall_points"),
@@ -399,6 +399,7 @@ async def _sync_user_team(db: Session, team_id: int) -> None:
     db.execute(stmt)
 
     # Fetch picks
+    picks_count = 0
     try:
         picks_data = await fpl_client.fetch_picks(team_id, current_event)
         picks = picks_data.get("picks", [])
@@ -417,6 +418,10 @@ async def _sync_user_team(db: Session, team_id: int) -> None:
             )
             db.add(pick)
 
-        logger.info("Synced %d picks for GW %d", len(picks), current_event)
+        picks_count = len(picks)
+        logger.info("Synced %d picks for GW %d", picks_count, current_event)
     except Exception as e:
         logger.warning("Could not fetch picks for GW %d: %s", current_event, e)
+
+    db.commit()
+    return {"gameweek_id": current_event, "picks_count": picks_count}

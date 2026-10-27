@@ -97,7 +97,7 @@ def plan_chip_strategy(db: Session, horizon: int = 8) -> dict[str, any]:
                     "chip": "Triple Captain",
                     "recommended_gw": gw,
                     "confidence": confidence,
-                    "reasoning": f"GW{gw} offers exceptional return for {player.webName} ({pred.expected_points} xPts" + (" in a Double Gameweek" if has_dgw else "") + ")."
+                    "reasoning": f"GW{gw} offers exceptional return for {player.web_name} ({pred.expected_points} xPts" + (" in a Double Gameweek" if has_dgw else "") + ")."
                 })
 
         # 3. Bench Boost Strategy

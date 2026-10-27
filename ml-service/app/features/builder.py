@@ -88,18 +88,20 @@ def build_feature_dataframe(db: Session, target_gw: int | None = None) -> pd.Dat
         else:
             rolling_pts_3 = float(p.form or 0)
             rolling_pts_5 = float(p.form or 0)
-            rolling_mins_3 = 60.0 if p.minutes > 0 else 0.0
-            rolling_mins_5 = 60.0 if p.minutes > 0 else 0.0
-            rolling_xg_5 = float(p.expected_goals or 0) / max(1, p.minutes / 90.0)
-            rolling_xa_5 = float(p.expected_assists or 0) / max(1, p.minutes / 90.0)
-            rolling_xgi_5 = float(p.expected_goal_involvements or 0) / max(1, p.minutes / 90.0)
-            start_ratio_5 = 1.0 if p.minutes > 300 else 0.5
+            # Estimate rolling mins from season minutes (assuming ~8 games elapsed)
+            avg_season_mins = float(p.minutes) / 8.0 if p.minutes > 0 else 0.0
+            rolling_mins_3 = avg_season_mins
+            rolling_mins_5 = avg_season_mins
+            rolling_xg_5 = float(p.expected_goals or 0) / max(1.0, p.minutes / 90.0) if p.minutes > 90 else 0.0
+            rolling_xa_5 = float(p.expected_assists or 0) / max(1.0, p.minutes / 90.0) if p.minutes > 90 else 0.0
+            rolling_xgi_5 = float(p.expected_goal_involvements or 0) / max(1.0, p.minutes / 90.0) if p.minutes > 90 else 0.0
+            start_ratio_5 = min(1.0, float(p.minutes) / 600.0) if p.minutes > 200 else (0.15 if p.minutes > 0 else 0.0)
 
-        # Per 90 rates
-        tot_mins = max(1, p.minutes)
-        pp90_goals = (p.goals_scored / tot_mins) * 90.0
-        pp90_assists = (p.assists / tot_mins) * 90.0
-        pp90_xgi = (float(p.expected_goal_involvements or 0) / tot_mins) * 90.0
+        # Per 90 rates smoothed with Bayesian pseudo-minutes (180 mins) to prevent tiny-sample explosion
+        eff_mins = p.minutes + 180.0
+        pp90_goals = min(1.5, (p.goals_scored / eff_mins) * 90.0)
+        pp90_assists = min(1.2, (p.assists / eff_mins) * 90.0)
+        pp90_xgi = min(1.5, (float(p.expected_goal_involvements or 0) / eff_mins) * 90.0)
 
         player_data.append({
             'player_id': p.id,

@@ -17,19 +17,30 @@ public class RecommendationController {
     }
 
     /**
-     * GET /api/recommendations/transfers?horizon=3
+     * GET /api/predictions/status
      */
-    @GetMapping("/recommendations/transfers")
-    public ResponseEntity<Map<String, Object>> getTransfers(@RequestParam(defaultValue = "3") int horizon) {
-        return ResponseEntity.ok(recommendationService.getTransferRecommendations(horizon));
+    @GetMapping("/predictions/status")
+    public ResponseEntity<Map<String, Object>> getPredictionStatus() {
+        return ResponseEntity.ok(recommendationService.getPredictionStatus());
     }
 
     /**
-     * GET /api/recommendations/captain
+     * GET /api/recommendations/transfers?horizon=3&limit=10
+     */
+    @GetMapping("/recommendations/transfers")
+    public ResponseEntity<Map<String, Object>> getTransfers(
+            @RequestParam(defaultValue = "3") int horizon,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(recommendationService.getTransferRecommendations(horizon, limit));
+    }
+
+    /**
+     * GET /api/recommendations/captain?riskProfile=balanced
      */
     @GetMapping("/recommendations/captain")
-    public ResponseEntity<Map<String, Object>> getCaptains() {
-        return ResponseEntity.ok(recommendationService.getCaptainRecommendations());
+    public ResponseEntity<Map<String, Object>> getCaptains(
+            @RequestParam(defaultValue = "balanced") String riskProfile) {
+        return ResponseEntity.ok(recommendationService.getCaptainRecommendations(riskProfile));
     }
 
     /**
@@ -44,7 +55,8 @@ public class RecommendationController {
      * GET /api/analysis/differentials
      */
     @GetMapping("/analysis/differentials")
-    public ResponseEntity<Map<String, Object>> getDifferentials(@RequestParam(defaultValue = "12.0") double maxOwnership) {
+    public ResponseEntity<Map<String, Object>> getDifferentials(
+            @RequestParam(required = false) Double maxOwnership) {
         return ResponseEntity.ok(recommendationService.getDifferentials(maxOwnership));
     }
 
@@ -60,7 +72,9 @@ public class RecommendationController {
      * POST /api/predictions/generate
      */
     @PostMapping("/predictions/generate")
-    public ResponseEntity<Map<String, Object>> generatePredictions(@RequestParam(required = false) Integer targetGw) {
-        return ResponseEntity.ok(recommendationService.generatePredictions(targetGw));
+    public ResponseEntity<Map<String, Object>> generatePredictions(
+            @RequestParam(required = false) Integer targetGw,
+            @RequestParam(defaultValue = "6") int horizon) {
+        return ResponseEntity.ok(recommendationService.generatePredictions(targetGw, horizon));
     }
 }

@@ -10,11 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Pulls data from the official FPL API and persists it into Postgres.
@@ -32,11 +34,13 @@ public class FplApiSyncService {
     private final FixtureRepository fixtureRepo;
     private final MyTeamPickRepository myTeamPickRepo;
     private final MyTeamStateRepository myTeamStateRepo;
+    private final RestTemplate restTemplate;
 
     public FplApiSyncService(FplApiClient fplApiClient, AppProperties appProperties,
                              TeamRepository teamRepo, PlayerRepository playerRepo,
                              GameweekRepository gameweekRepo, FixtureRepository fixtureRepo,
-                             MyTeamPickRepository myTeamPickRepo, MyTeamStateRepository myTeamStateRepo) {
+                             MyTeamPickRepository myTeamPickRepo, MyTeamStateRepository myTeamStateRepo,
+                             RestTemplate restTemplate) {
         this.fplApiClient = fplApiClient;
         this.appProperties = appProperties;
         this.teamRepo = teamRepo;
@@ -45,6 +49,7 @@ public class FplApiSyncService {
         this.fixtureRepo = fixtureRepo;
         this.myTeamPickRepo = myTeamPickRepo;
         this.myTeamStateRepo = myTeamStateRepo;
+        this.restTemplate = restTemplate;
     }
 
     private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ISO_DATE_TIME;
@@ -91,6 +96,7 @@ public class FplApiSyncService {
         try {
             syncUserTeam(targetTeamId);
             log.info("Successfully synced squad for FPL Team ID {}", targetTeamId);
+            notifyMlService(targetTeamId);
         } catch (Exception e) {
             log.warn("Failed to sync user team (id={}): {}", targetTeamId, e.getMessage());
         }
@@ -105,6 +111,17 @@ public class FplApiSyncService {
                 .fixturesUpdated(fixturesUpdated)
                 .gameweeksUpdated(gameweeksUpdated)
                 .build();
+    }
+
+    private void notifyMlService(int teamId) {
+        try {
+            String baseUrl = appProperties.getMlService().getBaseUrl();
+            log.info("Notifying ML service to sync squad and generate predictions for team {}...", teamId);
+            restTemplate.postForObject(baseUrl + "/api/v1/ingest/team?team_id=" + teamId, null, Map.class);
+            log.info("ML service team ingestion and prediction pipeline completed.");
+        } catch (Exception e) {
+            log.warn("Could not notify ML service (is ml-service running?): {}", e.getMessage());
+        }
     }
 
     // ─── Teams ───────────────────────────────────────────────
