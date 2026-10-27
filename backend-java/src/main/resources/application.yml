@@ -41,7 +41,12 @@ app:
     base-url: ${ML_SERVICE_URL:http://localhost:8000}
   ollama:
     base-url: ${OLLAMA_URL:http://localhost:11434}
-    model: llama3.1:8b
+    model: ${OLLAMA_MODEL:llama3.1:8b}
+    timeout-seconds: 90
+    temperature: 0.2
+    num-ctx: 4096
+  chat:
+    max-history-turns: 6
 
 # ─── Actuator ─────────────────────────────────────────────────
 management:
@@ -58,5 +63,3 @@ server:
 logging:
   level:
     com.fplassistant: INFO
-    org.springframework.web: INFO
-    org.hibernate.SQL: WARN

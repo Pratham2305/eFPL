@@ -62,3 +62,27 @@ export interface SyncResponse {
   fixturesUpdated: number;
   gameweeksUpdated: number;
 }
+
+export interface ChatRequest {
+  query: string;
+  conversationId?: string | null;
+}
+
+export interface ChatResponse {
+  query: string;
+  reply: string;
+  intent: string;
+  source: 'LLM' | 'DETERMINISTIC_FALLBACK' | string;
+  conversationId: string;
+  dataAsOf: string;
+  warning?: string | null;
+  grounded: boolean;
+}
+
+export interface ChatHealth {
+  ollamaReachable: boolean;
+  modelAvailable: boolean;
+  model: string;
+  predictionsAvailable: boolean;
+  dataAsOf: string;
+}
