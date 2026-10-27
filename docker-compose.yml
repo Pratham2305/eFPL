@@ -1,0 +1,98 @@
+version: "3.9"
+
+services:
+  # ─── PostgreSQL ──────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: fpl-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fpl}
+      POSTGRES_USER: ${POSTGRES_USER:-fpl}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fpl_secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - fpl-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fpl}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─── Java / Spring Boot API ──────────────────────────────────
+  backend-java:
+    build:
+      context: ./backend-java
+      dockerfile: Dockerfile
+    container_name: fpl-api
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-fpl}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-fpl}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-fpl_secret}
+      ML_SERVICE_URL: http://ml-service:8000
+      FPL_TEAM_ID: ${FPL_TEAM_ID:-0}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fpl-net
+
+  # ─── Python / FastAPI ML Service ─────────────────────────────
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: fpl-ml
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fpl}:${POSTGRES_PASSWORD:-fpl_secret}@postgres:5432/${POSTGRES_DB:-fpl}
+      FPL_API_BASE_URL: https://fantasy.premierleague.com/api
+      FPL_TEAM_ID: ${FPL_TEAM_ID:-0}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fpl-net
+
+  # ─── Frontend (React + TS + Vite) ────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fpl-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend-java
+    networks:
+      - fpl-net
+
+  # ─── Ollama (Local LLM) ─────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: fpl-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - fpl-net
+
+volumes:
+  pgdata:
+  ollama_data:
+
+networks:
+  fpl-net:
+    driver: bridge

@@ -1,0 +1,62 @@
+# ─── Application ───────────────────────────────────────────────
+spring:
+  application:
+    name: fpl-assistant-api
+
+  # ─── DataSource (H2 in PostgreSQL compatibility mode for zero-config local run) ───
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:fpl;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+
+  # ─── JPA / Hibernate ────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  # ─── Flyway ─────────────────────────────────────────────────
+  flyway:
+    enabled: false
+
+  # ─── Jackson ────────────────────────────────────────────────
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+# ─── Custom App Config ────────────────────────────────────────
+app:
+  fpl:
+    team-id: ${FPL_TEAM_ID:0}
+    api-base-url: https://fantasy.premierleague.com/api
+  ml-service:
+    base-url: ${ML_SERVICE_URL:http://localhost:8000}
+  ollama:
+    base-url: ${OLLAMA_URL:http://localhost:11434}
+    model: llama3.1:8b
+
+# ─── Actuator ─────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# ─── Server ───────────────────────────────────────────────────
+server:
+  port: 8080
+
+# ─── Logging ──────────────────────────────────────────────────
+logging:
+  level:
+    com.fplassistant: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN

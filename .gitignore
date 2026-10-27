@@ -1,0 +1,53 @@
+# ─── Java / Maven ──────────────────────────────────────────────
+backend-java/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ─── Python ────────────────────────────────────────────────────
+ml-service/__pycache__/
+ml-service/**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+ml-service/venv/
+ml-service/.venv/
+ml-service/*.egg-info/
+ml-service/dist/
+ml-service/build/
+
+# ─── Node / Frontend ──────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+
+# ─── IDE ───────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ─── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Environment ───────────────────────────────────────────────
+.env
+*.env.local
+
+# ─── Docker ────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ─── Data / Models ─────────────────────────────────────────────
+ml-service/data/
+ml-service/trained_models/
+*.pkl
+*.joblib
+*.onnx

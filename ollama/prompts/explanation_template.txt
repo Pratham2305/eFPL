@@ -1,0 +1,9 @@
+Context JSON:
+{context_json}
+
+Request:
+Explain the recommendation above detailing:
+1. RECOMMENDATION
+2. WHY
+3. RISKS
+4. ALTERNATIVES

@@ -1,0 +1,18 @@
+# ─── Test profile ──────────────────────────────────────────────
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/fpl_test
+    username: fpl
+    password: fpl_secret
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+app:
+  fpl:
+    team-id: 0
+    api-base-url: https://fantasy.premierleague.com/api
+  ml-service:
+    base-url: http://localhost:8000
