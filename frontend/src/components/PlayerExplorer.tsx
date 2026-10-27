@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, UserCheck } from 'lucide-react';
 import { PickDto } from '../types';
+import ClubBadge from './ClubBadge';
 
 interface PlayerExplorerProps {
   startingXI: PickDto[];
@@ -99,7 +100,12 @@ const PlayerExplorer: React.FC<PlayerExplorerProps> = ({ startingXI, bench }) =>
                     {player.position}
                   </span>
                 </td>
-                <td style={{ padding: '0.6rem', color: 'var(--accent-cyan)' }}>{player.teamShortName}</td>
+                <td style={{ padding: '0.6rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <ClubBadge team={player.teamCode || player.teamShortName} size={18} alt={player.teamShortName} />
+                    <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>{player.teamShortName}</span>
+                  </div>
+                </td>
                 <td style={{ padding: '0.6rem' }}>£{(player.nowCost / 10).toFixed(1)}m</td>
                 <td style={{ padding: '0.6rem', color: 'var(--accent-primary)', fontWeight: 600 }}>{player.form}</td>
                 <td style={{ padding: '0.6rem', fontWeight: 700 }}>{player.totalPoints}</td>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, ShieldAlert, Award, TrendingUp, Cpu } from 'lucide-react';
+import ClubBadge from './ClubBadge';
 
 interface RecommendationViewProps {
   currentGw: number;
@@ -125,9 +126,15 @@ const RecommendationsView: React.FC<RecommendationViewProps> = ({ currentGw }) =
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem', fontWeight: 700 }}>
-                        <span style={{ color: '#ff1744' }}>OUT: {t.transfer_out.web_name}</span>
+                        <span style={{ color: '#ff1744', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <ClubBadge team={t.transfer_out?.team_short || t.transfer_out?.team} size={16} />
+                          OUT: {t.transfer_out?.web_name}
+                        </span>
                         <ArrowRight size={14} color="var(--text-muted)" />
-                        <span style={{ color: 'var(--accent-primary)' }}>IN: {t.transfer_in.web_name}</span>
+                        <span style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <ClubBadge team={t.transfer_in?.team_short || t.transfer_in?.team} size={16} />
+                          IN: {t.transfer_in?.web_name}
+                        </span>
                       </div>
                       <span style={{
                         padding: '0.15rem 0.5rem',
@@ -202,10 +209,11 @@ const RecommendationsView: React.FC<RecommendationViewProps> = ({ currentGw }) =
                   justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
-                  <div>
-                    <span style={{ fontWeight: 700, fontSize: '0.9rem', marginRight: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>
                       {idx === 0 ? '👑 ' : idx === 1 ? '🥈 ' : '🥉 '}{c.web_name}
                     </span>
+                    <ClubBadge team={c.team_short} size={16} alt={c.team_short} />
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({c.team_short})</span>
                   </div>
 
@@ -273,8 +281,9 @@ const RecommendationsView: React.FC<RecommendationViewProps> = ({ currentGw }) =
                 }}>
                   <div>
                     <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{d.web_name} ({d.position_name})</span>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      {d.team_short} · {d.ownership_percent}% owned · £{(d.now_cost / 10).toFixed(1)}m
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                      <ClubBadge team={d.team_short} size={14} alt={d.team_short} />
+                      <span>{d.team_short} · {d.ownership_percent}% owned · £{(d.now_cost / 10).toFixed(1)}m</span>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>

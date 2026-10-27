@@ -41,13 +41,27 @@ public class FixtureService {
     }
 
     private FixtureDto toDto(Fixture f) {
+        Integer homeCode = f.getTeamHome() != null ? f.getTeamHome().getCode() : null;
+        Integer awayCode = f.getTeamAway() != null ? f.getTeamAway().getCode() : null;
+
+        String homeBadge = homeCode != null
+                ? "https://resources.premierleague.com/premierleague25/badges-alt/" + homeCode + ".svg"
+                : null;
+        String awayBadge = awayCode != null
+                ? "https://resources.premierleague.com/premierleague25/badges-alt/" + awayCode + ".svg"
+                : null;
+
         return FixtureDto.builder()
                 .id(f.getId())
                 .gameweekId(f.getGameweek() != null ? f.getGameweek().getId() : null)
-                .homeTeamName(f.getTeamHome().getName())
-                .homeTeamShortName(f.getTeamHome().getShortName())
-                .awayTeamName(f.getTeamAway().getName())
-                .awayTeamShortName(f.getTeamAway().getShortName())
+                .homeTeamName(f.getTeamHome() != null ? f.getTeamHome().getName() : "")
+                .homeTeamShortName(f.getTeamHome() != null ? f.getTeamHome().getShortName() : "")
+                .homeTeamCode(homeCode)
+                .homeBadgeUrl(homeBadge)
+                .awayTeamName(f.getTeamAway() != null ? f.getTeamAway().getName() : "")
+                .awayTeamShortName(f.getTeamAway() != null ? f.getTeamAway().getShortName() : "")
+                .awayTeamCode(awayCode)
+                .awayBadgeUrl(awayBadge)
                 .homeDifficulty(f.getTeamHomeDifficulty())
                 .awayDifficulty(f.getTeamAwayDifficulty())
                 .kickoffTime(f.getKickoffTime())

@@ -1,6 +1,7 @@
 import React from 'react';
 import { PickDto } from '../types';
 import { ShieldAlert, Activity } from 'lucide-react';
+import ClubBadge from './ClubBadge';
 
 interface PlayerCardProps {
   player: PickDto;
@@ -67,13 +68,19 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, isBench = false }) => {
         </span>
       )}
 
-      {/* Shirt / Jersey icon */}
+      {/* Official Club SVG Crest */}
       <div style={{
-        fontSize: '1.6rem',
-        marginBottom: '0.2rem',
-        lineHeight: 1
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 36,
+        marginBottom: '0.3rem',
       }}>
-        👕
+        <ClubBadge
+          team={player.teamCode || player.teamShortName}
+          size={32}
+          alt={player.teamShortName}
+        />
       </div>
 
       {/* Web Name */}

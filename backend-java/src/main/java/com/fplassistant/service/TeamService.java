@@ -89,9 +89,9 @@ public class TeamService {
             Player p = pick.getPlayer();
             Team t = p.getTeam();
 
-            // Generate official Premier League badge URL
+            // Generate official Premier League SVG badge URL
             Integer teamCode = t != null ? t.getCode() : 3;
-            String badgeUrl = "https://resources.premierleague.com/premierleague/badges/70/t" + teamCode + ".png";
+            String badgeUrl = "https://resources.premierleague.com/premierleague25/badges-alt/" + teamCode + ".svg";
 
             // Live event points calculation
             PlayerGameweekStats stats = statsMap.get(p.getId());

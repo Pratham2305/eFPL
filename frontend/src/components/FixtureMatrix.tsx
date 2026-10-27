@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FixtureDto } from '../types';
 import { Calendar, Filter } from 'lucide-react';
+import ClubBadge from './ClubBadge';
 
 interface FixtureMatrixProps {
   currentGw: number;
@@ -143,9 +144,9 @@ const FixtureMatrix: React.FC<FixtureMatrixProps> = ({ currentGw }) => {
               {sortedTeams.map((team) => (
                 <tr key={team.shortName} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <td style={{ padding: '0.6rem 1rem', fontWeight: 700, fontSize: '0.9rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.1rem' }}>🛡️</span>
-                      {team.shortName}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <ClubBadge team={team.shortName} size={22} alt={team.teamName || team.shortName} />
+                      <span>{team.shortName}</span>
                     </div>
                   </td>
 
@@ -177,8 +178,10 @@ const FixtureMatrix: React.FC<FixtureMatrixProps> = ({ currentGw }) => {
                               key={idx}
                               className={`fdr-badge fdr-${m.difficulty}`}
                               title={`${m.opponentShort} (${m.isHome ? 'Home' : 'Away'}) - FDR ${m.difficulty}`}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4, width: 'auto', minWidth: 50, padding: '0 6px' }}
                             >
-                              {m.opponentShort}({m.isHome ? 'H' : 'A'})
+                              <ClubBadge team={m.opponentShort} size={13} alt={m.opponentShort} />
+                              <span>{m.opponentShort}({m.isHome ? 'H' : 'A'})</span>
                             </div>
                           ))}
                         </div>

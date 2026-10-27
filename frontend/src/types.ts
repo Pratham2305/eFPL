@@ -2,6 +2,8 @@ export interface PickDto {
   playerId: number;
   webName: string;
   teamShortName: string;
+  teamCode?: number;
+  badgeUrl?: string;
   position: 'GK' | 'DEF' | 'MID' | 'FWD' | string;
   squadPosition: number;
   multiplier: number;
@@ -39,8 +41,12 @@ export interface FixtureDto {
   gameweekId: number | null;
   homeTeamName: string;
   homeTeamShortName: string;
+  homeTeamCode?: number;
+  homeBadgeUrl?: string;
   awayTeamName: string;
   awayTeamShortName: string;
+  awayTeamCode?: number;
+  awayBadgeUrl?: string;
   homeDifficulty: number; // FDR 1-5
   awayDifficulty: number; // FDR 1-5
   kickoffTime: string;

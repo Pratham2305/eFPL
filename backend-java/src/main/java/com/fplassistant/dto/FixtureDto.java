@@ -11,8 +11,12 @@ public class FixtureDto {
     private Integer gameweekId;
     private String homeTeamName;
     private String homeTeamShortName;
+    private Integer homeTeamCode;
+    private String homeBadgeUrl;
     private String awayTeamName;
     private String awayTeamShortName;
+    private Integer awayTeamCode;
+    private String awayBadgeUrl;
     private Short homeDifficulty;
     private Short awayDifficulty;
     private LocalDateTime kickoffTime;
@@ -32,11 +36,23 @@ public class FixtureDto {
     public String getHomeTeamShortName() { return homeTeamShortName; }
     public void setHomeTeamShortName(String homeTeamShortName) { this.homeTeamShortName = homeTeamShortName; }
 
+    public Integer getHomeTeamCode() { return homeTeamCode; }
+    public void setHomeTeamCode(Integer homeTeamCode) { this.homeTeamCode = homeTeamCode; }
+
+    public String getHomeBadgeUrl() { return homeBadgeUrl; }
+    public void setHomeBadgeUrl(String homeBadgeUrl) { this.homeBadgeUrl = homeBadgeUrl; }
+
     public String getAwayTeamName() { return awayTeamName; }
     public void setAwayTeamName(String awayTeamName) { this.awayTeamName = awayTeamName; }
 
     public String getAwayTeamShortName() { return awayTeamShortName; }
     public void setAwayTeamShortName(String awayTeamShortName) { this.awayTeamShortName = awayTeamShortName; }
+
+    public Integer getAwayTeamCode() { return awayTeamCode; }
+    public void setAwayTeamCode(Integer awayTeamCode) { this.awayTeamCode = awayTeamCode; }
+
+    public String getAwayBadgeUrl() { return awayBadgeUrl; }
+    public void setAwayBadgeUrl(String awayBadgeUrl) { this.awayBadgeUrl = awayBadgeUrl; }
 
     public Short getHomeDifficulty() { return homeDifficulty; }
     public void setHomeDifficulty(Short homeDifficulty) { this.homeDifficulty = homeDifficulty; }
@@ -64,8 +80,12 @@ public class FixtureDto {
         public Builder gameweekId(Integer v) { instance.setGameweekId(v); return this; }
         public Builder homeTeamName(String v) { instance.setHomeTeamName(v); return this; }
         public Builder homeTeamShortName(String v) { instance.setHomeTeamShortName(v); return this; }
+        public Builder homeTeamCode(Integer v) { instance.setHomeTeamCode(v); return this; }
+        public Builder homeBadgeUrl(String v) { instance.setHomeBadgeUrl(v); return this; }
         public Builder awayTeamName(String v) { instance.setAwayTeamName(v); return this; }
         public Builder awayTeamShortName(String v) { instance.setAwayTeamShortName(v); return this; }
+        public Builder awayTeamCode(Integer v) { instance.setAwayTeamCode(v); return this; }
+        public Builder awayBadgeUrl(String v) { instance.setAwayBadgeUrl(v); return this; }
         public Builder homeDifficulty(Short v) { instance.setHomeDifficulty(v); return this; }
         public Builder awayDifficulty(Short v) { instance.setAwayDifficulty(v); return this; }
         public Builder kickoffTime(LocalDateTime v) { instance.setKickoffTime(v); return this; }
