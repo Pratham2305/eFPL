@@ -16,6 +16,7 @@ backend-java/target/
 target/
 *.class
 *.jar
+!**/.mvn/wrapper/maven-wrapper.jar
 *.war
 *.ear
 .mvn/timing.properties
