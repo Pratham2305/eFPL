@@ -16,38 +16,40 @@
 
 ## 📸 Application Tour & Interface
 
+> *Tip: Click any image to view it full size in your browser.*
+
 ### 1. Tactical Pitch View & Expected Points (`My Squad`)
 Visualizes your active starting XI and bench in real tactical formations (e.g., 3-5-2, 5-3-2) with projected squad expected points ($xP$), official FPL player card attributes, vice/captain indicators, real-time injury flags, and projected pre-deadline lineups.
 
-![Tactical Pitch View](docs/screenshots/squad-pitch-view.png)
+[![Tactical Pitch View](docs/screenshots/squad-pitch-view.png)](docs/screenshots/squad-pitch-view.png?raw=true)
 
 ---
 
 ### 2. Decision Engine & Transfer Recommendations (`AI Recommendations`)
 Squad-aware optimization recommending transfer-in / transfer-out pairs across **1-GW, 3-GW, and 6-GW horizons**. Evaluates net expected points gained ($\Delta xP$), budget impact, fixture difficulty swings, recent form momentum, ownership trends, and tactical rationale.
 
-![AI Decision Engine Recommendations](docs/screenshots/ai-recommendations.png)
+[![AI Decision Engine Recommendations](docs/screenshots/ai-recommendations.png)](docs/screenshots/ai-recommendations.png?raw=true)
 
 ---
 
 ### 3. Season Performance History & Gameweek Analytics (`Performance History`)
 Comprehensive retrospective intelligence comparing cumulative score against overall league average, global rank trajectory, captaincy efficiency (average points per gameweek & optimal hit rate), points left on the bench, and transfer discipline with zero points lost to hits.
 
-![Season Performance History](docs/screenshots/performance-history.png)
+[![Season Performance History](docs/screenshots/performance-history.png)](docs/screenshots/performance-history.png?raw=true)
 
 ---
 
 ### 4. Premier League Player Directory (`Player Directory`)
 Filterable, searchable browser of all Premier League players. Filter by position (GKP, DEF, MID, FWD), squad affiliation, club, price range, injury status, and ownership percentage. Compare model projected $xP$, recent form, ICT index, and color-coded upcoming fixture difficulty ratings (FDR).
 
-![Premier League Player Directory](docs/screenshots/player-directory.png)
+[![Premier League Player Directory](docs/screenshots/player-directory.png)](docs/screenshots/player-directory.png?raw=true)
 
 ---
 
 ### 5. Forward-Looking Chip Deployment Strategy (`Chip Strategy`)
 8-gameweek forecasting engine evaluating Blank Gameweeks (BGW), Double Gameweeks (DGW), and fixture swings. Provides tactical confidence scores and targeted gameweeks to deploy Wildcard, Free Hit, Bench Boost, and Triple Captain.
 
-![Forward-Looking Chip Strategy](docs/screenshots/chip-strategy.png)
+[![Forward-Looking Chip Strategy](docs/screenshots/chip-strategy.png)](docs/screenshots/chip-strategy.png?raw=true)
 
 ---
 
@@ -157,7 +159,7 @@ Ensure Docker Desktop is running on your system, then run:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/eFPL.git
+git clone https://github.com/Pratham2305/eFPL.git
 cd eFPL
 
 # 2. Copy environment file and configure your FPL Team ID
