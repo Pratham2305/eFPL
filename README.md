@@ -2,6 +2,53 @@
 
 > A personalized, data-driven Fantasy Premier League decision-support system. Java (Spring Boot) owns the product/API layer, Python owns data/ML, and a local LLM (Ollama) explains model outputs in plain-English advice. Zero-cost, local-first, containerized.
 
+[![Java](https://img.shields.io/badge/Java-21-orange.svg?logo=openjdk)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen.svg?logo=springboot)](https://spring.io/projects/spring-boot)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg?logo=postgresql)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg?logo=docker)](https://www.docker.com/)
+[![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-black.svg?logo=ollama)](https://ollama.com/)
+
+---
+
+## 📸 Application Tour & Interface
+
+### 1. Tactical Pitch View & Expected Points (`My Squad`)
+Visualizes your active starting XI and bench in real tactical formations (e.g., 3-5-2, 5-3-2) with projected squad expected points ($xP$), official FPL player card attributes, vice/captain indicators, real-time injury flags, and projected pre-deadline lineups.
+
+![Tactical Pitch View](docs/screenshots/squad-pitch-view.png)
+
+---
+
+### 2. Decision Engine & Transfer Recommendations (`AI Recommendations`)
+Squad-aware optimization recommending transfer-in / transfer-out pairs across **1-GW, 3-GW, and 6-GW horizons**. Evaluates net expected points gained ($\Delta xP$), budget impact, fixture difficulty swings, recent form momentum, ownership trends, and tactical rationale.
+
+![AI Decision Engine Recommendations](docs/screenshots/ai-recommendations.png)
+
+---
+
+### 3. Season Performance History & Gameweek Analytics (`Performance History`)
+Comprehensive retrospective intelligence comparing cumulative score against overall league average, global rank trajectory, captaincy efficiency (average points per gameweek & optimal hit rate), points left on the bench, and transfer discipline with zero points lost to hits.
+
+![Season Performance History](docs/screenshots/performance-history.png)
+
+---
+
+### 4. Premier League Player Directory (`Player Directory`)
+Filterable, searchable browser of all Premier League players. Filter by position (GKP, DEF, MID, FWD), squad affiliation, club, price range, injury status, and ownership percentage. Compare model projected $xP$, recent form, ICT index, and color-coded upcoming fixture difficulty ratings (FDR).
+
+![Premier League Player Directory](docs/screenshots/player-directory.png)
+
+---
+
+### 5. Forward-Looking Chip Deployment Strategy (`Chip Strategy`)
+8-gameweek forecasting engine evaluating Blank Gameweeks (BGW), Double Gameweeks (DGW), and fixture swings. Provides tactical confidence scores and targeted gameweeks to deploy Wildcard, Free Hit, Bench Boost, and Triple Captain.
+
+![Forward-Looking Chip Strategy](docs/screenshots/chip-strategy.png)
+
 ---
 
 ## 🌟 Resume Framing
@@ -43,14 +90,15 @@
 
 ---
 
-## ✨ Features
+## ✨ Core Features
 
-- **🏆 Tactical Pitch View**: Interactive 4-4-2 / 3-5-2 pitch visualization for starting XI and substitute bench with captain (C) / vice-captain (V) badges, price (£m), form, and injury status.
-- **📅 Fixture Difficulty Rating (FDR) Matrix**: Multi-gameweek fixture runs (3, 5, 8 GW horizon) for all 20 Premier League clubs with color-coded difficulty badges (1-5) and Blank/Double GW flags.
-- **🤖 ML Expected Points (xPoints) Model**: Predicts expected points, floor (10th percentile), and ceiling (90th percentile) conditioned on P(start), position, form, underlying xGI, and fixture difficulty.
-- **📈 Squad-Aware Transfer Scorer**: Ranks transfer-in / transfer-out pairs by net expected points gain over a 3-GW horizon ($\text{xPts}_{\text{in}} - \text{xPts}_{\text{out}} - \text{hit\_cost}$), enforcing FPL budget and club limit constraints (max 3 per club).
+- **🏆 Tactical Pitch View**: Interactive pitch visualization for starting XI and substitute bench with captain (C) / vice-captain (V) badges, price (£m), form, and injury status.
+- **📈 Squad-Aware Transfer Scorer**: Ranks transfer pairs by net expected points gain over a 3-GW horizon ($\text{xPts}_{\text{in}} - \text{xPts}_{\text{out}} - \text{hit\_cost}$), enforcing FPL budget and 3-players-per-club constraints.
 - **👑 Risk-Adjusted Captaincy Ranker**: Ranks squad starters for Safe (high floor) vs. Differential (high ceiling) captain choices.
 - **🛡️ Squad Weakness & Differential Detector**: Highlights low-xPoints/injured starters needing transfer attention and low-ownership (<10%) target gems.
+- **📊 Performance History & Analytics**: Deep analysis of historic gameweek scores vs. league average, rank tracking, bench points, and captain pick success.
+- **🔍 Player Directory**: Full filterable database of all 600+ Premier League players with search, price filters, next fixture FDR, form, and xPoints.
+- **📅 Fixture Difficulty Rating (FDR) Matrix**: Multi-gameweek fixture runs (3, 5, 8 GW horizon) for all 20 Premier League clubs with color-coded difficulty badges (1-5) and Blank/Double GW flags.
 - **🚀 Chip Strategy Roadmap**: Forward-looking 8-GW timeline planning optimal deployment windows for Wildcard, Free Hit, Bench Boost, and Triple Captain.
 - **💬 Grounded AI Chat Assistant**: Interactive AI assistant powered by local Ollama with intent classification, multi-turn conversation memory, response validation, and automatic deterministic fallback when Ollama is offline.
 

@@ -93,3 +93,7 @@ ehthumbs.db
 
 # ─── Docker ────────────────────────────────────────────────────
 docker-compose.override.yml
+
+# ─── Internal / Planning Docs ──────────────────────────────────
+fpl-app-project-plan.md
+*-plan.md
