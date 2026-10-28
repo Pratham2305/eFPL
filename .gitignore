@@ -1,29 +1,77 @@
+# ─── Environment & Secrets ─────────────────────────────────────
+# Never commit real credentials, private keys, or manager-specific IDs
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ─── Logs & Process IDs ────────────────────────────────────────
+logs/
+*.log
+*.pid
+
 # ─── Java / Maven ──────────────────────────────────────────────
 backend-java/target/
+target/
 *.class
 *.jar
 *.war
 *.ear
+.mvn/timing.properties
+.flattened-pom.xml
 
 # ─── Python ────────────────────────────────────────────────────
-ml-service/__pycache__/
-ml-service/**/__pycache__/
-*.pyc
-*.pyo
-*.pyd
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
 .Python
 ml-service/venv/
 ml-service/.venv/
+venv/
+.venv/
+ENV/
+env/
 ml-service/*.egg-info/
+*.egg-info/
+dist/
+build/
 ml-service/dist/
 ml-service/build/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
 
 # ─── Node / Frontend ──────────────────────────────────────────
 frontend/node_modules/
+node_modules/
 frontend/dist/
 frontend/.next/
+.npm/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# ─── IDE ───────────────────────────────────────────────────────
+# ─── Databases & SQLite Lock/Journal Files ──────────────────────
+# SQLite ephemeral/journal files
+*.db-wal
+*.db-shm
+*.db-journal
+
+# ─── ML Data & Models ──────────────────────────────────────────
+ml-service/data/
+ml-service/trained_models/
+*.pkl
+*.joblib
+*.onnx
+
+# ─── IDE & Editors ─────────────────────────────────────────────
 .idea/
 *.iml
 .vscode/
@@ -34,20 +82,14 @@ frontend/.next/
 .classpath
 .settings/
 
-# ─── OS ────────────────────────────────────────────────────────
+# ─── OS Specific ───────────────────────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
-
-# ─── Environment ───────────────────────────────────────────────
-.env
-*.env.local
+ehthumbs.db
 
 # ─── Docker ────────────────────────────────────────────────────
 docker-compose.override.yml
-
-# ─── Data / Models ─────────────────────────────────────────────
-ml-service/data/
-ml-service/trained_models/
-*.pkl
-*.joblib
-*.onnx
