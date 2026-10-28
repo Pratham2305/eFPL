@@ -29,6 +29,8 @@ public class PlayerGameweekStats {
 
     private Integer minutes;
 
+    private Integer starts = 0;
+
     @Column(name = "goals_scored")
     private Integer goalsScored;
 
@@ -77,6 +79,18 @@ public class PlayerGameweekStats {
     @Column(name = "expected_goals_conceded")
     private BigDecimal expectedGoalsConceded;
 
+    @Column(name = "defensive_contribution")
+    private Integer defensiveContribution = 0;
+
+    private Integer recoveries = 0;
+    private Integer tackles = 0;
+
+    @Column(name = "clearances_blocks_interceptions")
+    private Integer clearancesBlocksInterceptions = 0;
+
+    @Column(name = "in_dreamteam")
+    private Boolean inDreamteam = false;
+
     @Column(name = "player_value")
     private Integer value;
     private Integer selected;
@@ -109,6 +123,9 @@ public class PlayerGameweekStats {
 
     public Integer getMinutes() { return minutes; }
     public void setMinutes(Integer minutes) { this.minutes = minutes; }
+
+    public Integer getStarts() { return starts; }
+    public void setStarts(Integer starts) { this.starts = starts; }
 
     public Integer getGoalsScored() { return goalsScored; }
     public void setGoalsScored(Integer goalsScored) { this.goalsScored = goalsScored; }
@@ -169,6 +186,21 @@ public class PlayerGameweekStats {
 
     public BigDecimal getExpectedGoalsConceded() { return expectedGoalsConceded; }
     public void setExpectedGoalsConceded(BigDecimal expectedGoalsConceded) { this.expectedGoalsConceded = expectedGoalsConceded; }
+
+    public Integer getDefensiveContribution() { return defensiveContribution; }
+    public void setDefensiveContribution(Integer defensiveContribution) { this.defensiveContribution = defensiveContribution; }
+
+    public Integer getRecoveries() { return recoveries; }
+    public void setRecoveries(Integer recoveries) { this.recoveries = recoveries; }
+
+    public Integer getTackles() { return tackles; }
+    public void setTackles(Integer tackles) { this.tackles = tackles; }
+
+    public Integer getClearancesBlocksInterceptions() { return clearancesBlocksInterceptions; }
+    public void setClearancesBlocksInterceptions(Integer clearancesBlocksInterceptions) { this.clearancesBlocksInterceptions = clearancesBlocksInterceptions; }
+
+    public Boolean getInDreamteam() { return inDreamteam; }
+    public void setInDreamteam(Boolean inDreamteam) { this.inDreamteam = inDreamteam; }
 
     public Integer getValue() { return value; }
     public void setValue(Integer value) { this.value = value; }

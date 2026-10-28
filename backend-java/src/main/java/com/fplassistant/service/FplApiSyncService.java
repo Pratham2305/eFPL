@@ -34,12 +34,18 @@ public class FplApiSyncService {
     private final FixtureRepository fixtureRepo;
     private final MyTeamPickRepository myTeamPickRepo;
     private final MyTeamStateRepository myTeamStateRepo;
+    private final MyTeamAutoSubRepository myTeamAutoSubRepo;
+    private final PlayerGameweekStatsRepository playerGameweekStatsRepo;
+    private final TransferLogRepository transferLogRepo;
     private final RestTemplate restTemplate;
 
     public FplApiSyncService(FplApiClient fplApiClient, AppProperties appProperties,
                              TeamRepository teamRepo, PlayerRepository playerRepo,
                              GameweekRepository gameweekRepo, FixtureRepository fixtureRepo,
                              MyTeamPickRepository myTeamPickRepo, MyTeamStateRepository myTeamStateRepo,
+                             MyTeamAutoSubRepository myTeamAutoSubRepo,
+                             PlayerGameweekStatsRepository playerGameweekStatsRepo,
+                             TransferLogRepository transferLogRepo,
                              RestTemplate restTemplate) {
         this.fplApiClient = fplApiClient;
         this.appProperties = appProperties;
@@ -49,22 +55,30 @@ public class FplApiSyncService {
         this.fixtureRepo = fixtureRepo;
         this.myTeamPickRepo = myTeamPickRepo;
         this.myTeamStateRepo = myTeamStateRepo;
+        this.myTeamAutoSubRepo = myTeamAutoSubRepo;
+        this.playerGameweekStatsRepo = playerGameweekStatsRepo;
+        this.transferLogRepo = transferLogRepo;
         this.restTemplate = restTemplate;
     }
 
     private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ISO_DATE_TIME;
 
-    /**
-     * Full sync: bootstrap-static (teams, players, gameweeks) + fixtures + user's squad.
-     */
     @Transactional
     public SyncResponse fullSync() {
-        return fullSync(null);
+        return fullSync(null, false);
     }
 
     @Transactional
     public SyncResponse fullSync(Integer overrideTeamId) {
-        log.info("Starting full FPL data sync…");
+        return fullSync(overrideTeamId, false);
+    }
+
+    /**
+     * Full sync: bootstrap-static (teams, players, gameweeks) + fixtures + user's squad & history.
+     */
+    @Transactional
+    public SyncResponse fullSync(Integer overrideTeamId, boolean forceHistory) {
+        log.info("Starting full FPL data sync (forceHistory={})…", forceHistory);
 
         // 1. Bootstrap static — teams, players, gameweeks
         FplBootstrapResponse bootstrap;
@@ -87,18 +101,28 @@ public class FplApiSyncService {
             log.warn("Failed to fetch fixtures, continuing: {}", e.getMessage());
         }
 
-        // 3. User's squad (use overrideTeamId, config teamId, or default sample team 1)
+        // 3. User's squad & history
         int targetTeamId = overrideTeamId != null && overrideTeamId > 0 ? overrideTeamId : appProperties.getFpl().getTeamId();
         if (targetTeamId <= 0) {
             targetTeamId = 1; // Default sample FPL team ID
         }
 
+        int historyUpdated = 0;
+        int picksUpdated = 0;
+        int statsUpdated = 0;
+        int transfersUpdated = 0;
+
         try {
-            syncUserTeam(targetTeamId);
-            log.info("Successfully synced squad for FPL Team ID {}", targetTeamId);
+            int[] counts = syncUserTeamAndHistory(targetTeamId, forceHistory);
+            historyUpdated = counts[0];
+            picksUpdated = counts[1];
+            statsUpdated = counts[2];
+            transfersUpdated = counts[3];
+            log.info("Successfully synced squad/history for FPL Team ID {}: {} history GWs, {} picks, {} stats, {} transfers",
+                    targetTeamId, historyUpdated, picksUpdated, statsUpdated, transfersUpdated);
             notifyMlService(targetTeamId);
         } catch (Exception e) {
-            log.warn("Failed to sync user team (id={}): {}", targetTeamId, e.getMessage());
+            log.warn("Failed to sync user team (id={}): {}", targetTeamId, e.getMessage(), e);
         }
 
         log.info("Full sync complete: {} teams, {} gameweeks, {} players, {} fixtures",
@@ -110,6 +134,10 @@ public class FplApiSyncService {
                 .playersUpdated(playersUpdated)
                 .fixturesUpdated(fixturesUpdated)
                 .gameweeksUpdated(gameweeksUpdated)
+                .historyGameweeksUpdated(historyUpdated)
+                .picksUpdated(picksUpdated)
+                .statsUpdated(statsUpdated)
+                .transfersUpdated(transfersUpdated)
                 .build();
     }
 
@@ -262,59 +290,230 @@ public class FplApiSyncService {
         return fplFixtures.size();
     }
 
-    // ─── User Team ───────────────────────────────────────────
+    // ─── User Team & History ─────────────────────────────────
 
-    private void syncUserTeam(int teamId) {
+    private int[] syncUserTeamAndHistory(int teamId, boolean forceHistory) {
+        int historyCount = 0;
+        int picksCount = 0;
+        int statsCount = 0;
+        int transfersCount = 0;
+
         FplEntryResponse entry = fplApiClient.fetchEntry(teamId);
         int currentGw = (entry != null && entry.getCurrentEvent() != null) ? entry.getCurrentEvent() : 1;
 
-        Gameweek gw = gameweekRepo.findById(currentGw).orElse(null);
-        if (gw == null) {
-            gw = gameweekRepo.findById(1).orElse(null);
-        }
-        if (gw == null) {
-            log.warn("Gameweek {} not found in database", currentGw);
-            return;
-        }
+        // 1. Fetch Entry History
+        FplHistoryResponse history = fplApiClient.fetchEntryHistory(teamId);
+        if (history != null && history.getCurrent() != null) {
+            for (FplHistoryResponse.HistoryCurrent hc : history.getCurrent()) {
+                if (hc.getEvent() == null) continue;
+                Gameweek gw = gameweekRepo.findById(hc.getEvent()).orElse(null);
+                if (gw == null) continue;
 
-        currentGw = gw.getId();
+                MyTeamState state = myTeamStateRepo.findByGameweekId(gw.getId())
+                        .orElse(new MyTeamState());
+                state.setGameweek(gw);
+                state.setGameweekPoints(hc.getPoints());
+                int cost = hc.getEventTransfersCost() != null ? hc.getEventTransfersCost() : 0;
+                state.setGameweekNetPoints(hc.getPoints() != null ? hc.getPoints() - cost : null);
+                state.setOverallPoints(hc.getTotalPoints());
+                state.setOverallRank(hc.getOverallRank());
+                state.setRank(hc.getRank());
+                state.setRankSort(hc.getRankSort());
+                state.setBank(hc.getBank());
+                state.setTeamValue(hc.getValue());
+                state.setEventTransfers(hc.getEventTransfers());
+                state.setEventTransfersCost(hc.getEventTransfersCost());
+                state.setPointsOnBench(hc.getPointsOnBench());
 
-        // Upsert team state
-        MyTeamState state = myTeamStateRepo.findByGameweekId(currentGw)
-                .orElse(new MyTeamState());
-        state.setGameweek(gw);
-        state.setOverallRank(entry.getSummaryOverallRank());
-        state.setOverallPoints(entry.getSummaryOverallPoints());
-        state.setGameweekPoints(entry.getSummaryEventPoints());
-        state.setBank(entry.getLastDeadlineBank());
-        state.setTeamValue(entry.getLastDeadlineValue());
-        myTeamStateRepo.save(state);
-
-        // Fetch picks for current GW
-        try {
-            FplPicksResponse picks = fplApiClient.fetchPicks(teamId, currentGw);
-            if (picks != null && picks.getPicks() != null) {
-                // Clear existing picks for this GW and re-insert
-                myTeamPickRepo.deleteByGameweekId(currentGw);
-                for (FplPicksResponse.FplPick pick : picks.getPicks()) {
-                    Player player = playerRepo.findById(pick.getElement()).orElse(null);
-                    if (player == null) continue;
-
-                    MyTeamPick tp = MyTeamPick.builder()
-                            .gameweek(gw)
-                            .player(player)
-                            .position(pick.getPosition().shortValue())
-                            .multiplier(pick.getMultiplier().shortValue())
-                            .isCaptain(pick.getIsCaptain())
-                            .isViceCaptain(pick.getIsViceCaptain())
-                            .build();
-                    myTeamPickRepo.save(tp);
+                // Check chips used
+                if (history.getChips() != null) {
+                    for (FplHistoryResponse.HistoryChip chip : history.getChips()) {
+                        if (gw.getId().equals(chip.getEvent())) {
+                            state.setActiveChip(chip.getName());
+                            if ("3xc".equalsIgnoreCase(chip.getName())) {
+                                state.setTripleCaptainActive(true);
+                                state.setTripleCaptainUsed(true);
+                            } else if ("bboost".equalsIgnoreCase(chip.getName())) {
+                                state.setBenchBoostActive(true);
+                                state.setBenchBoostUsed(true);
+                            } else if ("freehit".equalsIgnoreCase(chip.getName())) {
+                                state.setFreeHitActive(true);
+                                state.setFreeHitUsed(true);
+                            } else if ("wildcard".equalsIgnoreCase(chip.getName())) {
+                                state.setWildcardActive(true);
+                                state.setWildcardUsed(true);
+                            }
+                        }
+                    }
                 }
-                log.info("Synced {} picks for GW {}", picks.getPicks().size(), currentGw);
+
+                myTeamStateRepo.save(state);
+                historyCount++;
+            }
+        }
+
+        // 2. Fetch Transfers
+        try {
+            List<FplTransferResponse> transfers = fplApiClient.fetchTransfers(teamId);
+            if (transfers != null) {
+                for (FplTransferResponse t : transfers) {
+                    if (t.getEvent() == null || t.getElementIn() == null || t.getElementOut() == null) continue;
+                    Gameweek gw = gameweekRepo.findById(t.getEvent()).orElse(null);
+                    Player pIn = playerRepo.findById(t.getElementIn()).orElse(null);
+                    Player pOut = playerRepo.findById(t.getElementOut()).orElse(null);
+                    LocalDateTime tTime = parseDateTime(t.getTime());
+
+                    if (gw != null && pIn != null && pOut != null) {
+                        boolean exists = transferLogRepo.existsByGameweekIdAndPlayerInIdAndPlayerOutIdAndTransferTime(
+                                gw.getId(), pIn.getId(), pOut.getId(), tTime);
+                        if (!exists) {
+                            TransferLog tl = TransferLog.builder()
+                                    .gameweek(gw)
+                                    .playerIn(pIn)
+                                    .playerOut(pOut)
+                                    .playerInCost(t.getElementInCost())
+                                    .playerOutCost(t.getElementOutCost())
+                                    .transferTime(tTime)
+                                    .build();
+                            transferLogRepo.save(tl);
+                            transfersCount++;
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
-            log.warn("Could not fetch picks for GW {}: {}", currentGw, e.getMessage());
+            log.warn("Failed to sync transfers for team {}: {}", teamId, e.getMessage());
         }
+
+        // 3. For all gameweeks up to currentGw: sync picks & live player stats
+        int maxGwToSync = Math.max(currentGw, 1);
+        for (int gwId = 1; gwId <= maxGwToSync; gwId++) {
+            Gameweek gw = gameweekRepo.findById(gwId).orElse(null);
+            if (gw == null) continue;
+
+            boolean isFinished = Boolean.TRUE.equals(gw.getFinished());
+            boolean isDataChecked = Boolean.TRUE.equals(gw.getDataChecked());
+
+            // A. Picks & AutoSubs
+            long existingPicks = myTeamPickRepo.countByGameweekId(gwId);
+            if (existingPicks == 15 && isFinished && !forceHistory) {
+                log.debug("Skipping picks for settled GW {}", gwId);
+            } else {
+                try {
+                    FplPicksResponse picksResp = fplApiClient.fetchPicks(teamId, gwId);
+                    if (picksResp != null && picksResp.getPicks() != null && !picksResp.getPicks().isEmpty()) {
+                        myTeamPickRepo.deleteByGameweekId(gwId);
+                        myTeamAutoSubRepo.deleteByGameweekId(gwId);
+
+                        for (FplPicksResponse.FplPick p : picksResp.getPicks()) {
+                            Player player = playerRepo.findById(p.getElement()).orElse(null);
+                            if (player == null) continue;
+
+                            MyTeamPick pick = MyTeamPick.builder()
+                                    .gameweek(gw)
+                                    .player(player)
+                                    .position(p.getPosition().shortValue())
+                                    .multiplier(p.getMultiplier().shortValue())
+                                    .isCaptain(Boolean.TRUE.equals(p.getIsCaptain()))
+                                    .isViceCaptain(Boolean.TRUE.equals(p.getIsViceCaptain()))
+                                    .build();
+                            myTeamPickRepo.save(pick);
+                            picksCount++;
+                        }
+
+                        if (picksResp.getAutomaticSubs() != null) {
+                            for (FplPicksResponse.FplAutoSub sub : picksResp.getAutomaticSubs()) {
+                                Player in = playerRepo.findById(sub.getElementIn()).orElse(null);
+                                Player out = playerRepo.findById(sub.getElementOut()).orElse(null);
+                                if (in != null && out != null) {
+                                    MyTeamAutoSub autoSub = MyTeamAutoSub.builder()
+                                            .gameweek(gw)
+                                            .playerIn(in)
+                                            .playerOut(out)
+                                            .build();
+                                    myTeamAutoSubRepo.save(autoSub);
+                                }
+                            }
+                        }
+
+                        if (picksResp.getActiveChip() != null) {
+                            MyTeamState st = myTeamStateRepo.findByGameweekId(gwId).orElse(null);
+                            if (st != null) {
+                                st.setActiveChip(picksResp.getActiveChip());
+                                myTeamStateRepo.save(st);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not fetch picks for GW {}: {}", gwId, e.getMessage());
+                }
+            }
+
+            // B. Live Player Gameweek Stats
+            long existingStats = playerGameweekStatsRepo.countByGameweekId(gwId);
+            if (existingStats > 0 && isFinished && isDataChecked && !forceHistory) {
+                log.debug("Skipping live stats for settled and checked GW {}", gwId);
+            } else {
+                try {
+                    Thread.sleep(150); // Be polite to the FPL API
+                } catch (InterruptedException ignored) {}
+
+                try {
+                    FplLiveResponse liveResp = fplApiClient.fetchEventLive(gwId);
+                    if (liveResp != null && liveResp.getElements() != null) {
+                        for (FplLiveResponse.LiveElement le : liveResp.getElements()) {
+                            Player player = playerRepo.findById(le.getId()).orElse(null);
+                            if (player == null) continue;
+
+                            PlayerGameweekStats pgs = playerGameweekStatsRepo
+                                    .findFirstByPlayerIdAndGameweekId(player.getId(), gwId)
+                                    .orElse(new PlayerGameweekStats());
+
+                            pgs.setPlayer(player);
+                            pgs.setGameweek(gw);
+
+                            FplLiveResponse.LiveStats s = le.getStats();
+                            if (s != null) {
+                                pgs.setTotalPoints(s.getTotalPoints());
+                                pgs.setMinutes(s.getMinutes());
+                                pgs.setStarts(s.getStarts() != null ? s.getStarts() : 0);
+                                pgs.setGoalsScored(s.getGoalsScored());
+                                pgs.setAssists(s.getAssists());
+                                pgs.setCleanSheets(s.getCleanSheets());
+                                pgs.setGoalsConceded(s.getGoalsConceded());
+                                pgs.setOwnGoals(s.getOwnGoals());
+                                pgs.setPenaltiesSaved(s.getPenaltiesSaved());
+                                pgs.setPenaltiesMissed(s.getPenaltiesMissed());
+                                pgs.setYellowCards(s.getYellowCards());
+                                pgs.setRedCards(s.getRedCards());
+                                pgs.setSaves(s.getSaves());
+                                pgs.setBonus(s.getBonus());
+                                pgs.setBps(s.getBps());
+                                pgs.setInfluence(s.getInfluence());
+                                pgs.setCreativity(s.getCreativity());
+                                pgs.setThreat(s.getThreat());
+                                pgs.setIctIndex(s.getIctIndex());
+                                pgs.setExpectedGoals(s.getExpectedGoals());
+                                pgs.setExpectedAssists(s.getExpectedAssists());
+                                pgs.setExpectedGoalInvolvements(s.getExpectedGoalInvolvements());
+                                pgs.setExpectedGoalsConceded(s.getExpectedGoalsConceded());
+                                pgs.setInDreamteam(Boolean.TRUE.equals(s.getInDreamteam()));
+                                pgs.setDefensiveContribution(s.getDefensiveContribution() != null ? s.getDefensiveContribution() : 0);
+                                pgs.setRecoveries(s.getRecoveries() != null ? s.getRecoveries() : 0);
+                                pgs.setTackles(s.getTackles() != null ? s.getTackles() : 0);
+                                pgs.setClearancesBlocksInterceptions(s.getClearancesBlocksInterceptions() != null ? s.getClearancesBlocksInterceptions() : 0);
+                            }
+                            playerGameweekStatsRepo.save(pgs);
+                            statsCount++;
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not fetch live stats for GW {}: {}", gwId, e.getMessage());
+                }
+            }
+        }
+
+        return new int[]{historyCount, picksCount, statsCount, transfersCount};
     }
 
     // ─── Helpers ─────────────────────────────────────────────

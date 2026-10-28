@@ -24,6 +24,21 @@ public class MyTeamState {
     @Column(name = "gameweek_points")
     private Integer gameweekPoints;
 
+    @Column(name = "gameweek_rank")
+    private Integer gameweekRank;
+
+    @Column(name = "event_transfers")
+    private Integer eventTransfers;
+
+    @Column(name = "event_transfers_cost")
+    private Integer eventTransfersCost;
+
+    @Column(name = "points_on_bench")
+    private Integer pointsOnBench;
+
+    @Column(name = "active_chip", length = 30)
+    private String activeChip;
+
     private Integer bank = 0;
 
     @Column(name = "team_value")
@@ -63,6 +78,49 @@ public class MyTeamState {
 
     public Integer getGameweekPoints() { return gameweekPoints; }
     public void setGameweekPoints(Integer gameweekPoints) { this.gameweekPoints = gameweekPoints; }
+
+    public Integer getGameweekRank() { return gameweekRank; }
+    public void setGameweekRank(Integer gameweekRank) { this.gameweekRank = gameweekRank; }
+
+    // Aliases for rank
+    public Integer getRank() { return gameweekRank; }
+    public void setRank(Integer rank) { this.gameweekRank = rank; }
+    public void setRankSort(Integer rankSort) {}
+
+    public Integer getGameweekNetPoints() {
+        if (gameweekPoints == null) return null;
+        int cost = eventTransfersCost != null ? eventTransfersCost : 0;
+        return gameweekPoints - cost;
+    }
+    public void setGameweekNetPoints(Integer netPoints) {}
+
+    public Integer getEventTransfers() { return eventTransfers; }
+    public void setEventTransfers(Integer eventTransfers) { this.eventTransfers = eventTransfers; }
+
+    public Integer getEventTransfersCost() { return eventTransfersCost; }
+    public void setEventTransfersCost(Integer eventTransfersCost) { this.eventTransfersCost = eventTransfersCost; }
+
+    public Integer getPointsOnBench() { return pointsOnBench; }
+    public void setPointsOnBench(Integer pointsOnBench) { this.pointsOnBench = pointsOnBench; }
+
+    public String getActiveChip() { return activeChip; }
+    public void setActiveChip(String activeChip) { this.activeChip = activeChip; }
+
+    public Boolean getTripleCaptainActive() { return "3xc".equalsIgnoreCase(activeChip); }
+    public void setTripleCaptainActive(boolean active) { if (active) this.tripleCaptainAvailable = false; }
+    public void setTripleCaptainUsed(boolean used) { if (used) this.tripleCaptainAvailable = false; }
+
+    public Boolean getBenchBoostActive() { return "bboost".equalsIgnoreCase(activeChip); }
+    public void setBenchBoostActive(boolean active) { if (active) this.benchBoostAvailable = false; }
+    public void setBenchBoostUsed(boolean used) { if (used) this.benchBoostAvailable = false; }
+
+    public Boolean getFreeHitActive() { return "freehit".equalsIgnoreCase(activeChip); }
+    public void setFreeHitActive(boolean active) { if (active) this.freeHitAvailable = false; }
+    public void setFreeHitUsed(boolean used) { if (used) this.freeHitAvailable = false; }
+
+    public Boolean getWildcardActive() { return "wildcard".equalsIgnoreCase(activeChip); }
+    public void setWildcardActive(boolean active) { if (active) this.wildcardAvailable = false; }
+    public void setWildcardUsed(boolean used) { if (used) this.wildcardAvailable = false; }
 
     public Integer getBank() { return bank; }
     public void setBank(Integer bank) { this.bank = bank; }

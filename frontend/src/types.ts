@@ -12,6 +12,21 @@ export interface PickDto {
   nowCost: number; // in tenths e.g. 100 = £10.0m
   form: number;
   totalPoints: number;
+  rawPoints?: number;
+  effectivePoints?: number;
+  eventPoints?: number;
+  expectedPoints?: number;
+  minutes?: number;
+  goals?: number;
+  assists?: number;
+  cleanSheets?: number;
+  bonus?: number;
+  bps?: number;
+  yellowCards?: number;
+  redCards?: number;
+  isAutoSubIn?: boolean;
+  isAutoSubOut?: boolean;
+  subbedWithPlayerName?: string | null;
   status: string; // 'a', 'd', 'i', 's', 'u', 'n'
   news: string | null;
 }
@@ -27,16 +42,98 @@ export interface TeamCurrentResponse {
   gameweekId: number;
   currentGameweekId?: number;
   nextGameweekId?: number;
+  phase?: 'FINISHED' | 'LIVE' | 'UPCOMING' | 'FUTURE' | string;
+  isProjected?: boolean;
   overallRank: number;
   overallPoints: number;
   gameweekPoints: number;
+  gameweekNetPoints?: number;
+  transfersCost?: number;
+  pointsOnBench?: number;
   liveTotalPoints?: number;
+  reconciledGameweekPoints?: number;
+  pointsDiscrepancy?: boolean;
+  averageEntryScore?: number;
+  highestScore?: number;
+  activeChip?: string | null;
   bank: number; // in tenths
   teamValue: number; // in tenths
   freeTransfers: number;
   chips: ChipsAvailable;
   startingXI: PickDto[];
   bench: PickDto[];
+}
+
+export interface GameweekDto {
+  id: number;
+  name: string;
+  deadlineTime: string;
+  averageEntryScore: number | null;
+  highestScore: number | null;
+  isCurrent: boolean;
+  isNext: boolean;
+  isPrevious: boolean;
+  finished: boolean;
+  dataChecked: boolean;
+  phase: 'FINISHED' | 'LIVE' | 'UPCOMING' | 'FUTURE' | string;
+  isDefaultHome: boolean;
+}
+
+export interface CaptainEfficiencyDto {
+  totalCaptainPoints: number;
+  averageCaptainPoints: number;
+  optimalCaptainHits: number;
+  totalGameweeks: number;
+}
+
+export interface SeasonKpiDto {
+  totalPoints: number;
+  currentOverallRank: number;
+  bestGameweekRank: number | null;
+  bestGameweekRankEvent: number | null;
+  averageGameweekScore: number;
+  averageLeagueScore: number;
+  scoreVersusLeagueAvg: number;
+  totalTransfers: number;
+  totalTransferCost: number;
+  totalBenchPoints: number;
+  teamValue: number;
+  bank: number;
+  captainEfficiency: CaptainEfficiencyDto;
+}
+
+export interface GameweekHistoryDto {
+  gameweekId: number;
+  gameweekName: string;
+  points: number;
+  netPoints: number;
+  averageScore: number | null;
+  highestScore: number | null;
+  rank: number | null;
+  overallRank: number | null;
+  overallPoints: number;
+  transfers: number;
+  transferCost: number;
+  pointsOnBench: number;
+  bank: number | null;
+  teamValue: number | null;
+  chipUsed: string | null;
+  captainName: string;
+  captainPoints: number;
+}
+
+export interface ChipUsageDto {
+  gameweekId: number;
+  chip: string;
+  chipName: string;
+  gameweekPoints: number;
+}
+
+export interface PerformanceHistoryResponse {
+  summary: SeasonKpiDto;
+  gameweeks: GameweekHistoryDto[];
+  deterministicInsights: string[];
+  chipsTimeline: ChipUsageDto[];
 }
 
 export interface FixtureDto {
@@ -64,6 +161,10 @@ export interface SyncResponse {
   playersUpdated: number;
   fixturesUpdated: number;
   gameweeksUpdated: number;
+  historyGameweeksUpdated?: number;
+  picksUpdated?: number;
+  statsUpdated?: number;
+  transfersUpdated?: number;
 }
 
 export interface ChatRequest {

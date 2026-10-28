@@ -1,33 +1,64 @@
 import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import PitchView from './components/PitchView';
+import GameweekSelector from './components/GameweekSelector';
 import FixtureMatrix from './components/FixtureMatrix';
 import PlayerExplorer from './components/PlayerExplorer';
 import RecommendationsView from './components/RecommendationsView';
 import ChipStrategyView from './components/ChipStrategyView';
+import HistoryView from './components/history/HistoryView';
 import AiChatModal from './components/AiChatModal';
-import { TeamCurrentResponse } from './types';
-import { LayoutGrid, Calendar, Users, Sparkles, Layers, MessageSquare, AlertCircle } from 'lucide-react';
+import { TeamCurrentResponse, GameweekDto } from './types';
+import { LayoutGrid, Calendar, Users, Sparkles, Layers, MessageSquare, AlertCircle, TrendingUp } from 'lucide-react';
 
 export function App() {
   const [team, setTeam] = useState<TeamCurrentResponse | null>(null);
+  const [gameweeks, setGameweeks] = useState<GameweekDto[]>([]);
+  const [selectedGw, setSelectedGw] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [teamId, setTeamId] = useState<string>(() => localStorage.getItem('fpl_team_id') || '3500002');
-  const [activeTab, setActiveTab] = useState<'pitch' | 'recommendations' | 'chips' | 'fixtures' | 'directory'>('pitch');
+  const [activeTab, setActiveTab] = useState<'pitch' | 'recommendations' | 'chips' | 'fixtures' | 'directory' | 'history'>('pitch');
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [chatInitialQuery, setChatInitialQuery] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchTeamData();
+    initialLoad();
   }, []);
 
-  const fetchTeamData = async () => {
+  const initialLoad = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/team/current');
+      // 1. Fetch gameweeks to know phases and default home
+      let defaultGwId: number | null = null;
+      try {
+        const gwRes = await fetch('/api/gameweeks');
+        if (gwRes.ok) {
+          const gwList: GameweekDto[] = await gwRes.json();
+          setGameweeks(gwList);
+          const defaultGw = gwList.find((g) => g.isDefaultHome);
+          if (defaultGw) {
+            defaultGwId = defaultGw.id;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load gameweek phases:', e);
+      }
+
+      // 2. Fetch squad for default or current gameweek
+      await fetchTeamData(defaultGwId);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTeamData = async (gwId?: number | null) => {
+    setError(null);
+    try {
+      const url = gwId ? `/api/team/gameweek/${gwId}` : '/api/team/current';
+      const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 404) {
           setError('No squad data found yet. Click "Sync FPL Data" above to pull your live team.');
@@ -36,14 +67,24 @@ export function App() {
         }
         setTeam(null);
       } else {
-        const data = await res.json();
+        const data: TeamCurrentResponse = await res.json();
         setTeam(data);
+        setSelectedGw(data.gameweekId);
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred loading your team.');
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const handleSelectGameweek = async (gwId: number) => {
+    setSelectedGw(gwId);
+    await fetchTeamData(gwId);
+  };
+
+  const handleJumpFromHistory = async (gwId: number) => {
+    setActiveTab('pitch');
+    setSelectedGw(gwId);
+    await fetchTeamData(gwId);
   };
 
   const handleSync = async () => {
@@ -51,13 +92,13 @@ export function App() {
     setError(null);
     try {
       const parsedId = parseInt(teamId, 10);
-      const url = parsedId && !isNaN(parsedId) ? `/api/team/sync?teamId=${parsedId}` : '/api/team/sync';
+      const url = parsedId && !isNaN(parsedId) ? `/api/team/sync?teamId=${parsedId}&forceHistory=true` : '/api/team/sync?forceHistory=true';
       if (parsedId && !isNaN(parsedId)) {
         localStorage.setItem('fpl_team_id', String(parsedId));
       }
       const res = await fetch(url, { method: 'POST' });
       if (!res.ok) throw new Error('FPL Sync failed');
-      await fetchTeamData();
+      await initialLoad();
     } catch (err: any) {
       setError(err.message || 'Sync failed');
     } finally {
@@ -85,13 +126,20 @@ export function App() {
       <main style={{ flex: 1, padding: '1.5rem 2rem', maxWidth: 1200, width: '100%', margin: '0 auto' }}>
         {/* Navigation Tabs */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-          <div className="nav-tabs">
+          <div className="nav-tabs" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
             <button
               id="tab-pitch"
               className={`tab-btn ${activeTab === 'pitch' ? 'active' : ''}`}
               onClick={() => setActiveTab('pitch')}
             >
               <LayoutGrid size={16} /> My Squad
+            </button>
+            <button
+              id="tab-history"
+              className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+              onClick={() => setActiveTab('history')}
+            >
+              <TrendingUp size={16} /> Performance History
             </button>
             <button
               id="tab-recommendations"
@@ -151,7 +199,16 @@ export function App() {
         {/* Tab 1: Pitch View */}
         {!loading && activeTab === 'pitch' && (
           team ? (
-            <PitchView team={team} />
+            <div>
+              {gameweeks.length > 0 && selectedGw && (
+                <GameweekSelector
+                  gameweeks={gameweeks}
+                  selectedGw={selectedGw}
+                  onSelectGw={handleSelectGameweek}
+                />
+              )}
+              <PitchView team={team} />
+            </div>
           ) : (
             <div className="glass-panel" style={{ textAlign: 'center', padding: '3rem 1.5rem', maxWidth: 600, margin: '2rem auto' }}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</div>
@@ -184,22 +241,27 @@ export function App() {
           )
         )}
 
-        {/* Tab 2: AI Recommendations View */}
+        {/* Tab 2: Performance History View */}
+        {!loading && activeTab === 'history' && (
+          <HistoryView onSelectGameweek={handleJumpFromHistory} />
+        )}
+
+        {/* Tab 3: AI Recommendations View */}
         {!loading && activeTab === 'recommendations' && (
           <RecommendationsView currentGw={team?.gameweekId || 1} />
         )}
 
-        {/* Tab 3: Chip Strategy View */}
+        {/* Tab 4: Chip Strategy View */}
         {!loading && activeTab === 'chips' && (
           <ChipStrategyView currentGw={team?.gameweekId || 1} />
         )}
 
-        {/* Tab 4: Fixture Matrix */}
+        {/* Tab 5: Fixture Matrix */}
         {!loading && activeTab === 'fixtures' && (
           <FixtureMatrix currentGw={team?.gameweekId || 1} />
         )}
 
-        {/* Tab 5: Player Directory */}
+        {/* Tab 6: Player Directory */}
         {!loading && activeTab === 'directory' && (
           <PlayerExplorer onAskAi={handleOpenChatWithQuery} />
         )}

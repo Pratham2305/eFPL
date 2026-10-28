@@ -1,6 +1,7 @@
 import React from 'react';
 import { TeamCurrentResponse } from '../types';
 import PlayerCard from './PlayerCard';
+import GameweekSummaryBar from './GameweekSummaryBar';
 
 interface PitchViewProps {
   team: TeamCurrentResponse;
@@ -17,6 +18,9 @@ const PitchView: React.FC<PitchViewProps> = ({ team }) => {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      {/* Gameweek Summary KPIs & Notifications */}
+      <GameweekSummaryBar team={team} />
+
       {/* Tactical Pitch Header */}
       <div style={{
         display: 'flex',
@@ -41,28 +45,28 @@ const PitchView: React.FC<PitchViewProps> = ({ team }) => {
         {/* GK Row */}
         <div className="pitch-row">
           {gks.map((player) => (
-            <PlayerCard key={player.playerId} player={player} />
+            <PlayerCard key={player.playerId} player={player} phase={team.phase} />
           ))}
         </div>
 
         {/* DEF Row */}
         <div className="pitch-row">
           {defs.map((player) => (
-            <PlayerCard key={player.playerId} player={player} />
+            <PlayerCard key={player.playerId} player={player} phase={team.phase} />
           ))}
         </div>
 
         {/* MID Row */}
         <div className="pitch-row">
           {mids.map((player) => (
-            <PlayerCard key={player.playerId} player={player} />
+            <PlayerCard key={player.playerId} player={player} phase={team.phase} />
           ))}
         </div>
 
         {/* FWD Row */}
         <div className="pitch-row" style={{ marginBottom: 0 }}>
           {fwds.map((player) => (
-            <PlayerCard key={player.playerId} player={player} />
+            <PlayerCard key={player.playerId} player={player} phase={team.phase} />
           ))}
         </div>
       </div>
@@ -77,7 +81,7 @@ const PitchView: React.FC<PitchViewProps> = ({ team }) => {
           textTransform: 'uppercase',
           letterSpacing: '0.05em'
         }}>
-          🪑 Substitute Bench
+          🪑 Substitute Bench {team.pointsOnBench !== undefined ? `(${team.pointsOnBench} pts)` : ''}
         </div>
 
         <div style={{
@@ -91,7 +95,7 @@ const PitchView: React.FC<PitchViewProps> = ({ team }) => {
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 2 }}>
                 {idx === 0 ? 'GK Bench' : `Bench #${idx}`}
               </span>
-              <PlayerCard player={player} isBench />
+              <PlayerCard player={player} isBench phase={team.phase} />
             </div>
           ))}
         </div>
