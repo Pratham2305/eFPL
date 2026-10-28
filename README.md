@@ -51,12 +51,6 @@ Filterable, searchable browser of all Premier League players. Filter by position
 
 ---
 
-## 🌟 Resume Framing
-
-> *"Built a full-stack FPL decision-support system: Spring Boot API + PostgreSQL for team/domain logic, a Python/FastAPI ML service predicting player expected points and start probability with backtested evaluation, a rules-based transfer/captaincy scoring engine on top of those predictions, and a local LLM (Ollama) layer that explains recommendations in natural language without generating its own numbers — fully containerized with Docker Compose, zero paid infrastructure."*
-
----
-
 ## 📐 System Architecture
 
 ```
